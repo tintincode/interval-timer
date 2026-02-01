@@ -307,12 +307,10 @@
                 this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             }
 
-            // Initialize speech synthesis on iOS
             initialize() {
                 if (this.isInitialized) return;
                 
                 if (this.isIOS && 'speechSynthesis' in window) {
-                    // Create a silent utterance to "prime" iOS speech
                     const utterance = new SpeechSynthesisUtterance('');
                     utterance.volume = 0;
                     window.speechSynthesis.speak(utterance);
@@ -326,24 +324,20 @@
             speak(text, voiceEnabled) {
                 if (!voiceEnabled) return;
                 
-                // Initialize on first use
                 if (!this.isInitialized) {
                     this.initialize();
                 }
 
-                // Cancel any ongoing speech
                 window.speechSynthesis.cancel();
 
-                // Small delay for iOS to process cancellation
                 setTimeout(() => {
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.rate = 1.1;
                     utterance.volume = 1.0;
                     utterance.lang = 'en-US';
                     
-                    // iOS-specific settings
                     if (this.isIOS) {
-                        utterance.rate = 1.0; // Slightly slower on iOS for better clarity
+                        utterance.rate = 1.0;
                     }
                     
                     window.speechSynthesis.speak(utterance);
@@ -574,10 +568,7 @@
             exerciseObjects = parseExercises();
             if (exerciseObjects.length === 0) return;
             
-            // Initialize speech synthesis on first start (iOS requirement)
             speechManager.initialize();
-            
-            // Enable wake lock
             await wakeLockManager.enable();
             
             const prep = parseInt(inputPrepare.value);
@@ -625,13 +616,63 @@
             speak("Workout complete."); 
         }
 
-        btnStart.addEventListener('click', () => timer && isPaused ? togglePause() : startWorkout());
-        btnPause.addEventListener('click', togglePause);
-        document.getElementById('btn-reset').addEventListener('click', async () => {
+        // ============================================
+        // SOFT RESET FUNCTION (No Page Reload)
+        // ============================================
+        async function resetTimer() {
+            console.log('🔄 Soft reset initiated');
+            
+            // Stop and clear timer
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            
+            // Cleanup resources
             await wakeLockManager.disable();
             speechManager.cancel();
-            location.reload();
-        });
+            
+            // Reset all state variables
+            isPaused = false;
+            currentPhase = 'prepare';
+            globalIntervalIndex = 0;
+            secondsRemaining = 0;
+            totalPhaseSeconds = 0;
+            exerciseObjects = [];
+            
+            // Reset UI - Status and Exercise
+            statusTextEl.innerText = 'Ready';
+            exerciseTextEl.innerText = 'Get Ready';
+            timeLeftEl.innerText = '00:00';
+            roundDisplayEl.innerText = 'Ready';
+            circuitDisplayEl.innerText = ' ';
+            
+            // Reset total time display
+            totalTimeDisplayEl.style.opacity = '1';
+            updateTotalTimeDisplay();
+            
+            // Hide "Next Up" section
+            nextUpContainer.classList.add('opacity-0');
+            nextUpContainer.classList.add('translate-y-2');
+            
+            // Reset buttons
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            
+            // Reset progress circle
+            progressCircle.classList.remove('text-emerald-500', 'text-orange-500');
+            progressCircle.classList.add('text-blue-500');
+            updateProgress(0);
+            
+            // Switch to timer tab
+            switchTab('timer');
+            
+            console.log('✓ Reset complete');
+        }
+
+        btnStart.addEventListener('click', () => timer && isPaused ? togglePause() : startWorkout());
+        btnPause.addEventListener('click', togglePause);
+        document.getElementById('btn-reset').addEventListener('click', resetTimer);
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
