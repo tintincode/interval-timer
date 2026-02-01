@@ -243,6 +243,68 @@
     </div>
 
     <script>
+        // ============================================
+        // WAKE LOCK MANAGER (Simplified)
+        // ============================================
+        class WakeLockManager {
+            constructor() {
+                this.wakeLock = null;
+                this.isSupported = 'wakeLock' in navigator;
+            }
+
+            async enable() {
+                if (!this.isSupported) {
+                    console.warn('Wake Lock API is not supported in this browser');
+                    return;
+                }
+
+                try {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('✓ Wake Lock enabled - screen will stay on');
+                    
+                    // Listen for wake lock release (can happen automatically)
+                    this.wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released');
+                    });
+                } catch (err) {
+                    console.error('Failed to enable Wake Lock:', err);
+                }
+            }
+
+            async disable() {
+                if (this.wakeLock) {
+                    try {
+                        await this.wakeLock.release();
+                        this.wakeLock = null;
+                        console.log('✓ Wake Lock disabled');
+                    } catch (err) {
+                        console.error('Error releasing Wake Lock:', err);
+                    }
+                }
+            }
+
+            async reEnable() {
+                // Only re-enable if we had a wake lock before
+                if (this.wakeLock !== null || this.isSupported) {
+                    await this.disable();
+                    await this.enable();
+                }
+            }
+        }
+
+        // Initialize wake lock manager
+        const wakeLockManager = new WakeLockManager();
+
+        // Re-enable wake lock when page becomes visible again (user returns to tab)
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible' && timer && !isPaused) {
+                await wakeLockManager.reEnable();
+            }
+        });
+
+        // ============================================
+        // TIMER CODE
+        // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
         let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, exerciseObjects = [];
@@ -318,7 +380,7 @@
                 tabTimerBtn.classList.add('tab-active');
                 tabSettingsBtn.classList.remove('tab-active');
                 navIndicator.style.transform = 'translateX(0%)';
-                updateTotalTimeDisplay(); // Update total time when switching to timer
+                updateTotalTimeDisplay();
             } else {
                 timerView.classList.remove('active');
                 settingsView.classList.add('active');
@@ -347,14 +409,11 @@
             const restTime = parseInt(inputRest.value);
             const prepTime = parseInt(inputPrepare.value);
             
-            // Calculate total work time
             let totalWorkTime = 0;
             exercises.forEach(ex => {
                 totalWorkTime += ex.duration;
             });
             
-            // Total time = prep + (work per circuit + rest per circuit) * circuits - last rest
-            // We subtract one rest because there's no rest after the final exercise
             const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercises.length * circuits - 1));
             
             return totalTime;
@@ -440,9 +499,13 @@
             updateProgress(100);
         }
 
-        function startWorkout() {
+        async function startWorkout() {
             exerciseObjects = parseExercises();
             if (exerciseObjects.length === 0) return;
+            
+            // Enable wake lock when workout starts
+            await wakeLockManager.enable();
+            
             const prep = parseInt(inputPrepare.value);
             isPaused = false;
             currentPhase = prep > 0 ? 'prepare' : 'work';
@@ -458,11 +521,29 @@
             switchTab('timer');
         }
 
-        function togglePause() { if (!timer) return; isPaused = !isPaused; btnStart.classList.toggle('hidden', !isPaused); btnPause.classList.toggle('hidden', isPaused); statusTextEl.innerText = isPaused ? 'Paused' : currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1); }
+        async function togglePause() { 
+            if (!timer) return; 
+            isPaused = !isPaused; 
+            
+            // Manage wake lock based on pause state
+            if (isPaused) {
+                await wakeLockManager.disable();
+            } else {
+                await wakeLockManager.enable();
+            }
+            
+            btnStart.classList.toggle('hidden', !isPaused); 
+            btnPause.classList.toggle('hidden', isPaused); 
+            statusTextEl.innerText = isPaused ? 'Paused' : currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1); 
+        }
         
-        function completeWorkout() { 
+        async function completeWorkout() { 
             clearInterval(timer); 
             timer = null; 
+            
+            // Disable wake lock when workout completes
+            await wakeLockManager.disable();
+            
             statusTextEl.innerText = 'Finished'; 
             exerciseTextEl.innerText = "Done!"; 
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
@@ -473,7 +554,10 @@
 
         btnStart.addEventListener('click', () => timer && isPaused ? togglePause() : startWorkout());
         btnPause.addEventListener('click', togglePause);
-        document.getElementById('btn-reset').addEventListener('click', () => location.reload());
+        document.getElementById('btn-reset').addEventListener('click', async () => {
+            await wakeLockManager.disable();
+            location.reload();
+        });
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
@@ -482,6 +566,11 @@
             timeLeftEl.innerText = formatTime(0);
             updateTotalTimeDisplay();
         };
+
+        // Clean up wake lock when page unloads
+        window.addEventListener('beforeunload', async () => {
+            await wakeLockManager.disable();
+        });
     </script>
 </body>
 </html>
