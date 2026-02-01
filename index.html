@@ -244,7 +244,7 @@
 
     <script>
         // ============================================
-        // WAKE LOCK MANAGER (Simplified)
+        // WAKE LOCK MANAGER
         // ============================================
         class WakeLockManager {
             constructor() {
@@ -262,7 +262,6 @@
                     this.wakeLock = await navigator.wakeLock.request('screen');
                     console.log('✓ Wake Lock enabled - screen will stay on');
                     
-                    // Listen for wake lock release (can happen automatically)
                     this.wakeLock.addEventListener('release', () => {
                         console.log('Wake Lock was released');
                     });
@@ -284,7 +283,6 @@
             }
 
             async reEnable() {
-                // Only re-enable if we had a wake lock before
                 if (this.wakeLock !== null || this.isSupported) {
                     await this.disable();
                     await this.enable();
@@ -292,15 +290,73 @@
             }
         }
 
-        // Initialize wake lock manager
         const wakeLockManager = new WakeLockManager();
 
-        // Re-enable wake lock when page becomes visible again (user returns to tab)
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState === 'visible' && timer && !isPaused) {
                 await wakeLockManager.reEnable();
             }
         });
+
+        // ============================================
+        // SPEECH SYNTHESIS MANAGER (iOS-Compatible)
+        // ============================================
+        class SpeechManager {
+            constructor() {
+                this.isInitialized = false;
+                this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            }
+
+            // Initialize speech synthesis on iOS
+            initialize() {
+                if (this.isInitialized) return;
+                
+                if (this.isIOS && 'speechSynthesis' in window) {
+                    // Create a silent utterance to "prime" iOS speech
+                    const utterance = new SpeechSynthesisUtterance('');
+                    utterance.volume = 0;
+                    window.speechSynthesis.speak(utterance);
+                    this.isInitialized = true;
+                    console.log('✓ Speech synthesis initialized for iOS');
+                } else {
+                    this.isInitialized = true;
+                }
+            }
+
+            speak(text, voiceEnabled) {
+                if (!voiceEnabled) return;
+                
+                // Initialize on first use
+                if (!this.isInitialized) {
+                    this.initialize();
+                }
+
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                // Small delay for iOS to process cancellation
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1.1;
+                    utterance.volume = 1.0;
+                    utterance.lang = 'en-US';
+                    
+                    // iOS-specific settings
+                    if (this.isIOS) {
+                        utterance.rate = 1.0; // Slightly slower on iOS for better clarity
+                    }
+                    
+                    window.speechSynthesis.speak(utterance);
+                    console.log('🔊 Speaking:', text);
+                }, this.isIOS ? 100 : 0);
+            }
+
+            cancel() {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        const speechManager = new SpeechManager();
 
         // ============================================
         // TIMER CODE
@@ -327,7 +383,6 @@
         const nextExerciseNameEl = document.getElementById('next-exercise-name');
         const inputWork = document.getElementById('input-work'), inputRest = document.getElementById('input-rest'), inputRounds = document.getElementById('input-rounds'), inputPrepare = document.getElementById('input-prepare'), inputExercises = document.getElementById('input-exercises');
 
-        // LocalStorage functions
         function saveSettings() {
             const settings = {
                 exercises: inputExercises.value,
@@ -358,7 +413,6 @@
             }
         }
 
-        // Auto-save settings when inputs change
         function setupAutoSave() {
             inputExercises.addEventListener('input', saveSettings);
             inputWork.addEventListener('input', saveSettings);
@@ -391,12 +445,29 @@
             }
         }
 
-        function toggleMute() { toggleVoice.checked = !toggleVoice.checked; handleMuteToggle(toggleVoice.checked); }
-        function handleMuteToggle(isUnmuted) {
-            if (isUnmuted) { btnMute.classList.remove('is-muted'); iconMuted.classList.add('hidden'); iconUnmuted.classList.remove('hidden'); }
-            else { btnMute.classList.add('is-muted'); iconMuted.classList.remove('hidden'); iconUnmuted.classList.add('hidden'); window.speechSynthesis.cancel(); }
+        function toggleMute() { 
+            toggleVoice.checked = !toggleVoice.checked; 
+            handleMuteToggle(toggleVoice.checked);
+            saveSettings();
         }
-        function speak(text) { if (!toggleVoice.checked) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.rate = 1.1; window.speechSynthesis.speak(utterance); }
+        
+        function handleMuteToggle(isUnmuted) {
+            if (isUnmuted) { 
+                btnMute.classList.remove('is-muted'); 
+                iconMuted.classList.add('hidden'); 
+                iconUnmuted.classList.remove('hidden'); 
+            } else { 
+                btnMute.classList.add('is-muted'); 
+                iconMuted.classList.remove('hidden'); 
+                iconUnmuted.classList.add('hidden'); 
+                speechManager.cancel();
+            }
+        }
+        
+        function speak(text) { 
+            speechManager.speak(text, toggleVoice.checked);
+        }
+        
         function updateProgress(percent) { progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE); }
         function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
         function parseExercises() { const defaultWork = parseInt(inputWork.value); return inputExercises.value.split(',').filter(i => i.trim() !== "").map(item => { const parts = item.split(':'); return { name: parts[0].trim(), duration: parts[1] ? parseInt(parts[1].trim()) : defaultWork }; }); }
@@ -503,7 +574,10 @@
             exerciseObjects = parseExercises();
             if (exerciseObjects.length === 0) return;
             
-            // Enable wake lock when workout starts
+            // Initialize speech synthesis on first start (iOS requirement)
+            speechManager.initialize();
+            
+            // Enable wake lock
             await wakeLockManager.enable();
             
             const prep = parseInt(inputPrepare.value);
@@ -525,9 +599,9 @@
             if (!timer) return; 
             isPaused = !isPaused; 
             
-            // Manage wake lock based on pause state
             if (isPaused) {
                 await wakeLockManager.disable();
+                speechManager.cancel();
             } else {
                 await wakeLockManager.enable();
             }
@@ -541,7 +615,6 @@
             clearInterval(timer); 
             timer = null; 
             
-            // Disable wake lock when workout completes
             await wakeLockManager.disable();
             
             statusTextEl.innerText = 'Finished'; 
@@ -556,6 +629,7 @@
         btnPause.addEventListener('click', togglePause);
         document.getElementById('btn-reset').addEventListener('click', async () => {
             await wakeLockManager.disable();
+            speechManager.cancel();
             location.reload();
         });
 
@@ -567,9 +641,9 @@
             updateTotalTimeDisplay();
         };
 
-        // Clean up wake lock when page unloads
         window.addEventListener('beforeunload', async () => {
             await wakeLockManager.disable();
+            speechManager.cancel();
         });
     </script>
 </body>
