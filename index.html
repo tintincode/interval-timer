@@ -221,7 +221,7 @@
                 <div class="space-y-4 pt-4">
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
                         <label class="text-[9px] font-black text-white/30 uppercase tracking-widest">Exercise List</label>
-                        <textarea id="input-exercises" rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:ring-1 focus:ring-blue-500 outline-none resize-none">Push ups:30, Mountain Climbers:20, Squats, Planks:60, Lunges, Burpees:15</textarea>
+                        <textarea id="input-exercises" rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:ring-1 focus:ring-blue-500 outline-none resize-none">Jumping jacks:30, Push ups:30, Crunches:30, Walk outs, Squats, Mountain Climbers</textarea>
                     </div>
                     <div class="apple-glass rounded-[24px] p-5">
                         <div class="grid grid-cols-2 gap-6">
@@ -230,10 +230,6 @@
                             <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Circuits</span><input type="number" id="input-rounds" value="3" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
                             <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Prep</span><input type="number" id="input-prepare" value="10" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
                         </div>
-                    </div>
-                    <div class="apple-glass rounded-[24px] p-5 flex justify-between items-center">
-                        <span class="text-xs font-black uppercase tracking-wide">Voice Assistant</span>
-                        <input type="checkbox" id="toggle-voice" checked onchange="handleMuteToggle(this.checked)" class="w-10 h-5 accent-blue-500">
                     </div>
                 </div>
             </div>
@@ -372,10 +368,12 @@
         const iconUnmuted = document.getElementById('icon-unmuted');
         const btnStart = document.getElementById('btn-start');
         const btnPause = document.getElementById('btn-pause');
-        const toggleVoice = document.getElementById('toggle-voice');
         const nextUpContainer = document.getElementById('next-up-container');
         const nextExerciseNameEl = document.getElementById('next-exercise-name');
         const inputWork = document.getElementById('input-work'), inputRest = document.getElementById('input-rest'), inputRounds = document.getElementById('input-rounds'), inputPrepare = document.getElementById('input-prepare'), inputExercises = document.getElementById('input-exercises');
+        
+        // Voice state variable (controlled by mute button)
+        let voiceEnabled = true;
 
         function saveSettings() {
             const settings = {
@@ -384,7 +382,7 @@
                 restTime: inputRest.value,
                 circuits: inputRounds.value,
                 prepTime: inputPrepare.value,
-                voiceEnabled: toggleVoice.checked
+                voiceEnabled: voiceEnabled
             };
             localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
         }
@@ -399,8 +397,8 @@
                     inputRest.value = settings.restTime || inputRest.value;
                     inputRounds.value = settings.circuits || inputRounds.value;
                     inputPrepare.value = settings.prepTime || inputPrepare.value;
-                    toggleVoice.checked = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
-                    handleMuteToggle(toggleVoice.checked);
+                    voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
+                    handleMuteToggle(voiceEnabled);
                 } catch (e) {
                     console.error('Error loading settings:', e);
                 }
@@ -413,7 +411,6 @@
             inputRest.addEventListener('input', saveSettings);
             inputRounds.addEventListener('input', saveSettings);
             inputPrepare.addEventListener('input', saveSettings);
-            toggleVoice.addEventListener('change', saveSettings);
         }
 
         function switchTab(tab) {
@@ -440,8 +437,8 @@
         }
 
         function toggleMute() { 
-            toggleVoice.checked = !toggleVoice.checked; 
-            handleMuteToggle(toggleVoice.checked);
+            voiceEnabled = !voiceEnabled; 
+            handleMuteToggle(voiceEnabled);
             saveSettings();
         }
         
@@ -459,7 +456,7 @@
         }
         
         function speak(text) { 
-            speechManager.speak(text, toggleVoice.checked);
+            speechManager.speak(text, voiceEnabled);
         }
         
         function updateProgress(percent) { progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE); }
@@ -539,7 +536,8 @@
                     nextUpContainer.classList.replace('opacity-100', 'opacity-0');
                     nextUpContainer.classList.add('translate-y-2');
                 }
-                speak(info.exercise.name + ". Begin.");
+                //speak(info.exercise.name + ". Begin.");
+                speak(info.exercise.name + ". Start.");
             }
         }
 
@@ -578,10 +576,13 @@
             secondsRemaining = totalPhaseSeconds;
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
+            updateProgress(100); // Set initial progress to full
             
             setVisualState(currentPhase);
             btnStart.classList.add('hidden');
             btnPause.classList.remove('hidden');
+            
+            // Start timer AFTER displaying initial state
             timer = setInterval(tick, 1000);
             switchTab('timer');
         }
