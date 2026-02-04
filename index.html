@@ -108,6 +108,57 @@
 
         .ios-button:active { transform: scale(0.92); opacity: 0.8; }
 
+        @keyframes pulseBig {
+            0%, 100% { 
+                transform: scale(1);
+            }
+            50% { 
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes pulseCircleGlow {
+            0%, 100% { 
+                stroke-width: 10;
+                opacity: 0.7;
+            }
+            50% { 
+                stroke-width: 12;
+                opacity: 0.9;
+            }
+        }
+        
+        @keyframes pulseRadialGlow {
+            0%, 100% { 
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.4;
+                transform: scale(1.1);
+            }
+        }
+
+        .pulse-text {
+            animation: pulseBig 1s ease-in-out infinite;
+        }
+
+        .pulse-circle-stroke {
+            animation: pulseCircleGlow 1s ease-in-out infinite;
+        }
+        
+        .pulse-radial-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(253, 224, 71, 0.25) 0%, rgba(253, 224, 71, 0.15) 30%, rgba(253, 224, 71, 0.06) 50%, rgba(253, 224, 71, 0.02) 70%, transparent 85%);
+            animation: pulseRadialGlow 1s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(12px);
+        }
+
         @media (max-height: 700px) {
             header { padding-top: 1.5rem !important; margin-bottom: 0.5rem !important; }
             .nav-container { margin-bottom: 1rem !important; margin-left: 1.5rem !important; margin-right: 1.5rem !important; }
@@ -235,10 +286,10 @@
                     </div>
                     <div class="apple-glass rounded-[24px] p-5">
                         <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Work</span><input type="number" id="input-work" value="45" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Rest</span><input type="number" id="input-rest" value="15" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Circuits</span><input type="number" id="input-rounds" value="3" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Prep</span><input type="number" id="input-prepare" value="10" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
+                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Work</span><input type="number" id="input-work" value="45" min="1" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
+                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Rest</span><input type="number" id="input-rest" value="15" min="0" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
+                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Circuits</span><input type="number" id="input-rounds" value="3" min="1" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
+                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Prep</span><input type="number" id="input-prepare" value="10" min="0" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
                         </div>
                     </div>
                 </div>
@@ -511,8 +562,14 @@
 
         function setVisualState(phase) {
             const colors = { prepare: 'text-blue-500', work: 'text-emerald-500', rest: 'text-orange-500' };
-            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500');
+            const textColors = { prepare: 'text-blue-400', work: 'text-emerald-400', rest: 'text-orange-400' };
+            
+            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-yellow-300', 'text-yellow-400');
             progressCircle.classList.add(colors[phase]);
+            
+            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-yellow-300', 'text-yellow-400');
+            exerciseTextEl.classList.add(textColors[phase]);
+            
             statusTextEl.innerText = phase.charAt(0).toUpperCase() + phase.slice(1);
             
             if (phase === 'prepare') {
@@ -619,12 +676,43 @@
             
             await wakeLockManager.disable();
             
-            statusTextEl.innerText = 'Finished'; 
-            exerciseTextEl.innerText = "Done!"; 
+            // Visual celebration - synchronized pulsing
+            statusTextEl.innerText = 'Complete!'; 
+            
+            // Change text to soft pastel yellow
+            exerciseTextEl.innerText = "Amazing!"; 
+            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-500', 'text-orange-500');
+            exerciseTextEl.classList.add('text-yellow-300');
+            
+            // Add pulsing to text
+            exerciseTextEl.classList.add('pulse-text');
+            
+            // Make the circle full (100%) so entire circle glows
+            updateProgress(100);
+            
+            // Make progress circle pulse
+            progressCircle.classList.add('pulse-circle-stroke');
+            
+            // Add circular radial glow behind the circle - soft pastel yellow
+            const progressContainer = document.querySelector('.progress-svg-container');
+            const glowDiv = document.createElement('div');
+            glowDiv.className = 'pulse-radial-glow';
+            glowDiv.id = 'completion-glow';
+            progressContainer.insertBefore(glowDiv, progressContainer.firstChild);
+            
+            // Vibration feedback (if supported)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+            
+            // Make progress circle soft yellow for completion
+            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-yellow-400');
+            progressCircle.classList.add('text-yellow-300');
+            
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
             btnStart.classList.remove('hidden'); 
             btnPause.classList.add('hidden'); 
-            speak("Workout complete."); 
+            speak("Workout complete! Great job!"); 
         }
 
         // ============================================
@@ -654,6 +742,8 @@
             // Reset UI - Status and Exercise
             statusTextEl.innerText = 'Ready';
             exerciseTextEl.innerText = 'Get Ready';
+            exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'pulse-text');
+            exerciseTextEl.classList.add('text-blue-400');
             timeLeftEl.innerText = '00:00';
             roundDisplayEl.innerText = 'Ready';
             circuitDisplayEl.innerText = ' ';
@@ -671,9 +761,13 @@
             btnPause.classList.add('hidden');
             
             // Reset progress circle
-            progressCircle.classList.remove('text-emerald-500', 'text-orange-500');
+            progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
             updateProgress(0);
+            
+            // Remove celebration glow
+            const completionGlow = document.getElementById('completion-glow');
+            if (completionGlow) completionGlow.remove();
             
             // Switch to timer tab
             switchTab('timer');
