@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Interval Timer – Professional HIIT</title>
+    <title>Interval Timer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -212,7 +212,6 @@
         <header class="flex justify-between items-center px-8 pt-10 mb-3 flex-shrink-0">
             <div class="flex flex-col gap-1 min-w-[140px]">
                 <span class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Interval Timer</span>
-                <h1 id="status-text" class="text-3xl font-black tracking-tighter text-white transition-all duration-500">Ready</h1>
             </div>
             <button id="btn-mute" onclick="toggleMute()" class="flex items-center justify-center p-3 h-10 w-10 rounded-2xl apple-glass border-white/5 shadow-xl">
                 <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,19 +260,19 @@
                 </div>
 
                 <div class="media-controls w-full px-12 flex items-center justify-center gap-6 mt-2">
-                    <button id="btn-reset" class="ios-button h-14 w-14 bg-white/5 text-white/60 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5"/></svg>
+                    <button id="btn-reset" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider hover:bg-white/10 hover:text-white transition-all">
+                        Reset
                     </button>
                     <div class="relative h-20 w-20">
-                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14c0 .86.94 1.36 1.66.9l11-7c.61-.39.61-1.29 0-1.68l-11-7C8.94 3.89 8 4.4 8 5.14z"/></svg>
+                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-sm uppercase tracking-wide">
+                            Start
                         </button>
-                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-xs uppercase tracking-wide">
+                            Pause
                         </button>
                     </div>
-                    <button onclick="nextPhase()" class="ios-button h-14 w-14 bg-white/5 text-white/60 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                    <button onclick="nextPhase()" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider hover:bg-white/10 hover:text-white transition-all">
+                        Skip
                     </button>
                 </div>
             </div>
@@ -281,15 +280,152 @@
             <div id="view-settings" class="tab-view px-8 pb-10">
                 <div class="space-y-4 pt-4">
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
-                        <label class="text-[9px] font-black text-white/30 uppercase tracking-widest">Exercise List</label>
-                        <textarea id="input-exercises" rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:ring-1 focus:ring-blue-500 outline-none resize-none">Jumping jacks:30, Push ups:30, Crunches:30, Walk outs, Squats, Mountain climbers</textarea>
+                        <label class="text-[10px] font-black text-white/40 uppercase tracking-widest">Exercise List</label>
+                        <textarea id="input-exercises" rows="3" placeholder="Exercise:duration (e.g., Push ups:30)&#10;Or just exercise name for default work time" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500/50 outline-none resize-none placeholder:text-white/20">Jumping jacks:30, Push ups:30, Crunches:30, Walk outs, Squats, Mountain climbers</textarea>
+                        <div class="flex items-center gap-2 text-[9px] text-white/30">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            <span>Separate with commas. Add :seconds for custom duration</span>
+                        </div>
                     </div>
-                    <div class="apple-glass rounded-[24px] p-5">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Work</span><input type="number" id="input-work" value="45" min="1" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Rest</span><input type="number" id="input-rest" value="15" min="0" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Circuits</span><input type="number" id="input-rounds" value="3" min="1" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
-                            <div class="flex flex-col items-center"><span class="text-[9px] font-bold text-white/40 uppercase">Prep</span><input type="number" id="input-prepare" value="10" min="0" class="w-16 bg-transparent text-2xl font-black text-center border-b border-white/10 outline-none"></div>
+                    
+                    <div class="apple-glass rounded-[24px] p-5 space-y-3">
+                        <label class="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 block">Intervals</label>
+                        
+                        <!-- Work -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Work</span>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="input-work" 
+                                    value="00:45" 
+                                    data-seconds="45"
+                                    onclick="this.select()"
+                                    onblur="handleTimeBlur('input-work')"
+                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeDecrement('input-work')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeDecrement('input-work')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeIncrement('input-work')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeIncrement('input-work')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Rest -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Rest</span>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="input-rest" 
+                                    value="00:15" 
+                                    data-seconds="15"
+                                    onclick="this.select()"
+                                    onblur="handleTimeBlur('input-rest')"
+                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeDecrement('input-rest')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeDecrement('input-rest')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeIncrement('input-rest')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeIncrement('input-rest')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Prep -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Prep</span>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="input-prepare" 
+                                    value="00:10" 
+                                    data-seconds="10"
+                                    onclick="this.select()"
+                                    onblur="handleTimeBlur('input-prepare')"
+                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeDecrement('input-prepare')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeDecrement('input-prepare')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startTimeIncrement('input-prepare')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startTimeIncrement('input-prepare')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-white/10 my-2"></div>
+                        
+                        <!-- Circuits -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Circuits</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl font-black tabular-nums text-white min-w-[3ch] text-right">
+                                    <input 
+                                        type="number" 
+                                        id="input-rounds" 
+                                        value="3" 
+                                        min="1" 
+                                        max="99"
+                                        onclick="this.select()"
+                                        class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums inline">
+                                </span>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startDecrement('input-rounds')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startDecrement('input-rounds')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startIncrement('input-rounds')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startIncrement('input-rounds')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -420,7 +556,6 @@
         const roundDisplayEl = document.getElementById('round-display');
         const circuitDisplayEl = document.getElementById('circuit-display');
         const totalTimeDisplayEl = document.getElementById('total-time-display');
-        const statusTextEl = document.getElementById('status-text');
         const exerciseTextEl = document.getElementById('current-exercise');
         const progressCircle = document.getElementById('progress-circle');
         const navIndicator = document.getElementById('nav-indicator');
@@ -439,10 +574,10 @@
         function saveSettings() {
             const settings = {
                 exercises: inputExercises.value,
-                workTime: inputWork.value,
-                restTime: inputRest.value,
+                workTime: getSecondsFromTimeInput('input-work'),
+                restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
-                prepTime: inputPrepare.value,
+                prepTime: getSecondsFromTimeInput('input-prepare'),
                 voiceEnabled: voiceEnabled
             };
             localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
@@ -454,10 +589,19 @@
                 try {
                     const settings = JSON.parse(saved);
                     inputExercises.value = settings.exercises || inputExercises.value;
-                    inputWork.value = settings.workTime || inputWork.value;
-                    inputRest.value = settings.restTime || inputRest.value;
+                    
+                    // Load time values
+                    if (settings.workTime !== undefined) {
+                        setTimeInputSeconds('input-work', settings.workTime);
+                    }
+                    if (settings.restTime !== undefined) {
+                        setTimeInputSeconds('input-rest', settings.restTime);
+                    }
+                    if (settings.prepTime !== undefined) {
+                        setTimeInputSeconds('input-prepare', settings.prepTime);
+                    }
+                    
                     inputRounds.value = settings.circuits || inputRounds.value;
-                    inputPrepare.value = settings.prepTime || inputPrepare.value;
                     voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
                     handleMuteToggle(voiceEnabled);
                 } catch (e) {
@@ -467,12 +611,204 @@
         }
 
         function setupAutoSave() {
-            inputExercises.addEventListener('input', saveSettings);
-            inputWork.addEventListener('input', saveSettings);
-            inputRest.addEventListener('input', saveSettings);
-            inputRounds.addEventListener('input', saveSettings);
-            inputPrepare.addEventListener('input', saveSettings);
+            [inputExercises, inputWork, inputRest, inputRounds, inputPrepare].forEach(el => {
+                el.addEventListener('input', () => {
+                    saveSettings();
+                    updateTotalTimeDisplay();
+                });
+            });
         }
+
+        // ============================================
+        // TIME INPUT HELPERS (MM:SS format)
+        // ============================================
+        function parseTimeInput(value) {
+            // Remove any spaces
+            value = value.trim();
+            
+            // If contains colon, parse as MM:SS
+            if (value.includes(':')) {
+                const parts = value.split(':');
+                const min = parseInt(parts[0]) || 0;
+                const sec = parseInt(parts[1]) || 0;
+                return min * 60 + sec;
+            }
+            
+            // Otherwise treat as seconds
+            return parseInt(value) || 0;
+        }
+
+        function formatToMMSS(seconds) {
+            seconds = Math.max(0, seconds); // No negatives
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function handleTimeBlur(inputId) {
+            const input = document.getElementById(inputId);
+            const seconds = parseTimeInput(input.value);
+            input.setAttribute('data-seconds', seconds);
+            input.value = formatToMMSS(seconds);
+            
+            // Trigger save and update
+            saveSettings();
+            updateTotalTimeDisplay();
+        }
+
+        function getSecondsFromTimeInput(inputId) {
+            const input = document.getElementById(inputId);
+            return parseInt(input.getAttribute('data-seconds')) || 0;
+        }
+
+        function setTimeInputSeconds(inputId, seconds) {
+            const input = document.getElementById(inputId);
+            seconds = Math.max(0, seconds);
+            input.setAttribute('data-seconds', seconds);
+            input.value = formatToMMSS(seconds);
+            
+            // Trigger save and update
+            input.dispatchEvent(new Event('input'));
+        }
+
+        // ============================================
+        // INCREMENT/DECREMENT WITH LONG-PRESS (for time inputs)
+        // ============================================
+        let adjustmentInterval = null;
+        let adjustmentTimeout = null;
+        let speedUpTimeout = null;
+
+        function incrementTimeValue(inputId) {
+            const seconds = getSecondsFromTimeInput(inputId);
+            setTimeInputSeconds(inputId, seconds + 5); // +5 seconds
+            
+            // Haptic feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function decrementTimeValue(inputId) {
+            const seconds = getSecondsFromTimeInput(inputId);
+            setTimeInputSeconds(inputId, seconds - 5); // -5 seconds
+            
+            // Haptic feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function startTimeIncrement(inputId) {
+            incrementTimeValue(inputId);
+            
+            adjustmentTimeout = setTimeout(() => {
+                adjustmentInterval = setInterval(() => {
+                    incrementTimeValue(inputId);
+                }, 150);
+                
+                speedUpTimeout = setTimeout(() => {
+                    clearInterval(adjustmentInterval);
+                    adjustmentInterval = setInterval(() => {
+                        incrementTimeValue(inputId);
+                    }, 75);
+                }, 2000);
+            }, 500);
+        }
+
+        function startTimeDecrement(inputId) {
+            decrementTimeValue(inputId);
+            
+            adjustmentTimeout = setTimeout(() => {
+                adjustmentInterval = setInterval(() => {
+                    decrementTimeValue(inputId);
+                }, 150);
+                
+                speedUpTimeout = setTimeout(() => {
+                    clearInterval(adjustmentInterval);
+                    adjustmentInterval = setInterval(() => {
+                        decrementTimeValue(inputId);
+                    }, 75);
+                }, 2000);
+            }, 500);
+        }
+
+        function stopAdjustment() {
+            clearTimeout(adjustmentTimeout);
+            clearTimeout(speedUpTimeout);
+            clearInterval(adjustmentInterval);
+            adjustmentTimeout = null;
+            speedUpTimeout = null;
+            adjustmentInterval = null;
+        }
+
+        // ============================================
+        // CIRCUITS INCREMENT/DECREMENT (still uses +/- 1)
+        // ============================================
+        function incrementValue(inputId) {
+            const input = document.getElementById(inputId);
+            const currentValue = parseInt(input.value) || 0;
+            const min = parseInt(input.min) || 0;
+            const max = parseInt(input.max) || 999;
+            
+            if (currentValue < max) {
+                input.value = currentValue + 1;
+                input.dispatchEvent(new Event('input'));
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+        }
+
+        function decrementValue(inputId) {
+            const input = document.getElementById(inputId);
+            const currentValue = parseInt(input.value) || 0;
+            const min = parseInt(input.min) || 0;
+            
+            if (currentValue > min) {
+                input.value = currentValue - 1;
+                input.dispatchEvent(new Event('input'));
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+        }
+
+        function startIncrement(inputId) {
+            incrementValue(inputId);
+            
+            adjustmentTimeout = setTimeout(() => {
+                adjustmentInterval = setInterval(() => {
+                    incrementValue(inputId);
+                }, 150);
+                
+                speedUpTimeout = setTimeout(() => {
+                    clearInterval(adjustmentInterval);
+                    adjustmentInterval = setInterval(() => {
+                        incrementValue(inputId);
+                    }, 75);
+                }, 2000);
+            }, 500);
+        }
+
+        function startDecrement(inputId) {
+            decrementValue(inputId);
+            
+            adjustmentTimeout = setTimeout(() => {
+                adjustmentInterval = setInterval(() => {
+                    decrementValue(inputId);
+                }, 150);
+                
+                speedUpTimeout = setTimeout(() => {
+                    clearInterval(adjustmentInterval);
+                    adjustmentInterval = setInterval(() => {
+                        decrementValue(inputId);
+                    }, 75);
+                }, 2000);
+            }, 500);
+        }
+
 
         function switchTab(tab) {
             const timerView = document.getElementById('view-timer');
@@ -522,15 +858,24 @@
         
         function updateProgress(percent) { progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE); }
         function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
-        function parseExercises() { const defaultWork = parseInt(inputWork.value); return inputExercises.value.split(',').filter(i => i.trim() !== "").map(item => { const parts = item.split(':'); return { name: parts[0].trim(), duration: parts[1] ? parseInt(parts[1].trim()) : defaultWork }; }); }
+        function parseExercises() { 
+            const defaultWork = getSecondsFromTimeInput('input-work'); 
+            return inputExercises.value.split(',').filter(i => i.trim() !== "").map(item => { 
+                const parts = item.split(':'); 
+                return { 
+                    name: parts[0].trim(), 
+                    duration: parts[1] ? parseInt(parts[1].trim()) : defaultWork 
+                }; 
+            }); 
+        }
         
         function calculateTotalTime() {
             const exercises = parseExercises();
             if (exercises.length === 0) return 0;
             
             const circuits = parseInt(inputRounds.value);
-            const restTime = parseInt(inputRest.value);
-            const prepTime = parseInt(inputPrepare.value);
+            const restTime = getSecondsFromTimeInput('input-rest');
+            const prepTime = getSecondsFromTimeInput('input-prepare');
             
             let totalWorkTime = 0;
             exercises.forEach(ex => {
@@ -570,7 +915,6 @@
             exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-yellow-300', 'text-yellow-400');
             exerciseTextEl.classList.add(textColors[phase]);
             
-            statusTextEl.innerText = phase.charAt(0).toUpperCase() + phase.slice(1);
             
             if (phase === 'prepare') {
                 exerciseTextEl.innerText = "Get Ready";
@@ -621,7 +965,7 @@
         function nextPhase() {
             if (!timer) return;
             if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
-            else if (currentPhase === 'work') { if (getIntervalData(globalIntervalIndex).isLastOverall) { completeWorkout(); return; } currentPhase = 'rest'; totalPhaseSeconds = parseInt(inputRest.value); }
+            else if (currentPhase === 'work') { if (getIntervalData(globalIntervalIndex).isLastOverall) { completeWorkout(); return; } currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
             else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; }
             secondsRemaining = totalPhaseSeconds;
             setVisualState(currentPhase);
@@ -633,10 +977,18 @@
             exerciseObjects = parseExercises();
             if (exerciseObjects.length === 0) return;
             
+            // Clean up any completion animations from previous workout
+            exerciseTextEl.classList.remove('pulse-text', 'text-yellow-300', 'text-yellow-400');
+            progressCircle.classList.remove('pulse-circle-stroke', 'text-yellow-300', 'text-yellow-400');
+            
+            // Remove completion glow if it exists
+            const completionGlow = document.getElementById('completion-glow');
+            if (completionGlow) completionGlow.remove();
+            
             speechManager.initialize();
             await wakeLockManager.enable();
             
-            const prep = parseInt(inputPrepare.value);
+            const prep = getSecondsFromTimeInput('input-prepare');
             isPaused = false;
             currentPhase = prep > 0 ? 'prepare' : 'work';
             totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
@@ -667,7 +1019,6 @@
             
             btnStart.classList.toggle('hidden', !isPaused); 
             btnPause.classList.toggle('hidden', isPaused); 
-            statusTextEl.innerText = isPaused ? 'Paused' : currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1); 
         }
         
         async function completeWorkout() { 
@@ -677,7 +1028,6 @@
             await wakeLockManager.disable();
             
             // Visual celebration - synchronized pulsing
-            statusTextEl.innerText = 'Complete!'; 
             
             // Change text to soft pastel yellow
             exerciseTextEl.innerText = "Amazing!"; 
@@ -740,7 +1090,6 @@
             exerciseObjects = [];
             
             // Reset UI - Status and Exercise
-            statusTextEl.innerText = 'Ready';
             exerciseTextEl.innerText = 'Get Ready';
             exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'pulse-text');
             exerciseTextEl.classList.add('text-blue-400');
