@@ -60,7 +60,7 @@
         }
 
         .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+            transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
@@ -305,20 +305,20 @@
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeDecrement('input-work')"
+                                    ontouchstart="startTimeDecrement('input-work', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeDecrement('input-work')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeIncrement('input-work')"
+                                    ontouchstart="startTimeIncrement('input-work', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeIncrement('input-work')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -338,20 +338,20 @@
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeDecrement('input-rest')"
+                                    ontouchstart="startTimeDecrement('input-rest', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeDecrement('input-rest')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeIncrement('input-rest')"
+                                    ontouchstart="startTimeIncrement('input-rest', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeIncrement('input-rest')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -371,20 +371,20 @@
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeDecrement('input-prepare')"
+                                    ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeDecrement('input-prepare')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
                                     class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startTimeIncrement('input-prepare')"
+                                    ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)"
                                     onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startTimeIncrement('input-prepare')"
-                                    ontouchend="stopAdjustment()">
+                                    onmouseleave="stopAdjustment()">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -677,6 +677,7 @@
         let adjustmentInterval = null;
         let adjustmentTimeout = null;
         let speedUpTimeout = null;
+        let isAdjusting = false; // Prevent double-fire on mobile
 
         function incrementTimeValue(inputId) {
             const seconds = getSecondsFromTimeInput(inputId);
@@ -698,7 +699,11 @@
             }
         }
 
-        function startTimeIncrement(inputId) {
+        function startTimeIncrement(inputId, event) {
+            if (isAdjusting) return;
+            if (event) event.preventDefault();
+            isAdjusting = true;
+            
             incrementTimeValue(inputId);
             
             adjustmentTimeout = setTimeout(() => {
@@ -715,7 +720,11 @@
             }, 500);
         }
 
-        function startTimeDecrement(inputId) {
+        function startTimeDecrement(inputId, event) {
+            if (isAdjusting) return;
+            if (event) event.preventDefault();
+            isAdjusting = true;
+            
             decrementTimeValue(inputId);
             
             adjustmentTimeout = setTimeout(() => {
@@ -739,6 +748,7 @@
             adjustmentTimeout = null;
             speedUpTimeout = null;
             adjustmentInterval = null;
+            isAdjusting = false;
         }
 
         // ============================================
@@ -856,7 +866,27 @@
             speechManager.speak(text, voiceEnabled);
         }
         
-        function updateProgress(percent) { progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE); }
+        function updateProgress(percent, fastRefill = false, fastReset = false) { 
+            if (fastReset && percent === 0) {
+                // Fast reset: use same speed as refill for consistency
+                progressCircle.style.transition = 'stroke-dashoffset 0.15s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease';
+                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
+                // Restore normal smooth draining transition after animation completes
+                setTimeout(() => {
+                    progressCircle.style.transition = 'stroke-dashoffset 1s linear, stroke 0.4s ease';
+                }, 150);
+            } else if (fastRefill && percent === 100) {
+                // Fast refill: temporarily use faster transition
+                progressCircle.style.transition = 'stroke-dashoffset 0.15s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease';
+                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
+                // Restore normal smooth draining transition after animation completes
+                setTimeout(() => {
+                    progressCircle.style.transition = 'stroke-dashoffset 1s linear, stroke 0.4s ease';
+                }, 150);
+            } else {
+                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
+            }
+        }
         function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
         function parseExercises() { 
             const defaultWork = getSecondsFromTimeInput('input-work'); 
@@ -970,7 +1000,7 @@
             secondsRemaining = totalPhaseSeconds;
             setVisualState(currentPhase);
             timeLeftEl.innerText = formatTime(secondsRemaining);
-            updateProgress(100);
+            updateProgress(100, true); // Fast refill
         }
 
         async function startWorkout() {
@@ -995,7 +1025,7 @@
             secondsRemaining = totalPhaseSeconds;
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
-            updateProgress(100); // Set initial progress to full
+            updateProgress(100, true); // Fast refill - Set initial progress to full
             
             setVisualState(currentPhase);
             btnStart.classList.add('hidden');
@@ -1038,7 +1068,7 @@
             exerciseTextEl.classList.add('pulse-text');
             
             // Make the circle full (100%) so entire circle glows
-            updateProgress(100);
+            updateProgress(100, true); // Fast refill
             
             // Make progress circle pulse
             progressCircle.classList.add('pulse-circle-stroke');
@@ -1112,7 +1142,7 @@
             // Reset progress circle
             progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
-            updateProgress(0);
+            updateProgress(0, false, true); // Fast reset - instant clear
             
             // Remove celebration glow
             const completionGlow = document.getElementById('completion-glow');
