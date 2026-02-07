@@ -279,6 +279,28 @@
 
             <div id="view-settings" class="tab-view px-8 pb-10">
                 <div class="space-y-4 pt-4">
+                    <!-- Audio Settings - FIRST -->
+                    <div class="apple-glass rounded-[24px] p-5 space-y-3">
+                        <label class="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 block">Audio</label>
+                        
+                        <div class="relative flex bg-white/[0.06] border border-white/[0.08] rounded-2xl p-1">
+                            <button 
+                                id="btn-audio-voice"
+                                onclick="setAudioType('voice')"
+                                class="tab-btn tab-active">
+                                Voice
+                            </button>
+                            <button 
+                                id="btn-audio-beep"
+                                onclick="setAudioType('beep')"
+                                class="tab-btn">
+                                Beep
+                            </button>
+                            <div id="audio-indicator" class="tab-indicator"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Exercise List - SECOND -->
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
                         <label class="text-[10px] font-black text-white/40 uppercase tracking-widest">Exercise List</label>
                         <textarea id="input-exercises" rows="3" placeholder="Exercise:duration (e.g., Push ups:30)&#10;Or just exercise name for default work time" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500/50 outline-none resize-none placeholder:text-white/20">Jumping jacks:30, Push ups:30, Crunches:30, Walk outs, Squats, Mountain climbers</textarea>
@@ -288,12 +310,84 @@
                         </div>
                     </div>
                     
+                    <!-- Intervals - THIRD (Reordered: Circuits, Prep, Exercise, Rest) -->
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
                         <label class="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 block">Intervals</label>
                         
-                        <!-- Work -->
+                        <!-- Circuits - FIRST -->
                         <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
-                            <span class="text-sm font-semibold text-white/70">Work</span>
+                            <span class="text-sm font-semibold text-white/70">Circuits</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl font-black tabular-nums text-white min-w-[3ch] text-right">
+                                    <input 
+                                        type="number" 
+                                        id="input-rounds" 
+                                        value="3" 
+                                        min="1" 
+                                        max="99"
+                                        onclick="this.select()"
+                                        class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums">
+                                </span>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startDecrement('input-rounds')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startDecrement('input-rounds')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    onmousedown="startIncrement('input-rounds')"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()"
+                                    ontouchstart="startIncrement('input-rounds')"
+                                    ontouchend="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-white/10 my-2"></div>
+                        
+                        <!-- Prep -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Prep</span>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="input-prepare" 
+                                    value="00:10" 
+                                    data-seconds="10"
+                                    onclick="this.select()"
+                                    onblur="handleTimeBlur('input-prepare')"
+                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                </button>
+                                <button 
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();"
+                                    ontouchend="stopAdjustment()"
+                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)"
+                                    onmouseup="stopAdjustment()"
+                                    onmouseleave="stopAdjustment()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Exercise (was Work) -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Exercise</span>
                             <div class="flex items-center gap-2">
                                 <input 
                                     type="text" 
@@ -356,78 +450,9 @@
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Prep -->
-                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
-                            <span class="text-sm font-semibold text-white/70">Prep</span>
-                            <div class="flex items-center gap-2">
-                                <input 
-                                    type="text" 
-                                    id="input-prepare" 
-                                    value="00:10" 
-                                    data-seconds="10"
-                                    onclick="this.select()"
-                                    onblur="handleTimeBlur('input-prepare')"
-                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
-                                <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();"
-                                    ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)"
-                                    onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
-                                </button>
-                                <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();"
-                                    ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)"
-                                    onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Divider -->
-                        <div class="border-t border-white/10 my-2"></div>
-                        
-                        <!-- Circuits -->
-                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
-                            <span class="text-sm font-semibold text-white/70">Circuits</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl font-black tabular-nums text-white min-w-[3ch] text-right">
-                                    <input 
-                                        type="number" 
-                                        id="input-rounds" 
-                                        value="3" 
-                                        min="1" 
-                                        max="99"
-                                        onclick="this.select()"
-                                        class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums inline">
-                                </span>
-                                <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startDecrement('input-rounds')"
-                                    onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startDecrement('input-rounds')"
-                                    ontouchend="stopAdjustment()">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
-                                </button>
-                                <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                                    onmousedown="startIncrement('input-rounds')"
-                                    onmouseup="stopAdjustment()"
-                                    onmouseleave="stopAdjustment()"
-                                    ontouchstart="startIncrement('input-rounds')"
-                                    ontouchend="stopAdjustment()">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
-                                </button>
-                            </div>
-                        </div>
                     </div>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
@@ -570,6 +595,34 @@
         
         // Voice state variable (controlled by mute button)
         let voiceEnabled = true;
+        let audioType = 'voice'; // 'voice' or 'beep'
+        
+        // Beep sound generator
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep(frequency = 800, duration = 100) {
+            if (!voiceEnabled) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                const now = audioContext.currentTime;
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration / 1000);
+                
+                oscillator.start(now);
+                oscillator.stop(now + duration / 1000);
+            } catch (e) {
+                console.error('Beep error:', e);
+            }
+        }
 
         function saveSettings() {
             const settings = {
@@ -578,7 +631,8 @@
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
-                voiceEnabled: voiceEnabled
+                voiceEnabled: voiceEnabled,
+                audioType: audioType
             };
             localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
         }
@@ -604,9 +658,37 @@
                     inputRounds.value = settings.circuits || inputRounds.value;
                     voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
                     handleMuteToggle(voiceEnabled);
+                    
+                    // Load audio type
+                    audioType = settings.audioType || 'voice';
+                    updateAudioTypeUI();
                 } catch (e) {
                     console.error('Error loading settings:', e);
                 }
+            }
+        }
+        
+        function setAudioType(type) {
+            audioType = type;
+            updateAudioTypeUI();
+            saveSettings();
+        }
+        
+        function updateAudioTypeUI() {
+            const voiceBtn = document.getElementById('btn-audio-voice');
+            const beepBtn = document.getElementById('btn-audio-beep');
+            const indicator = document.getElementById('audio-indicator');
+            
+            if (!voiceBtn || !beepBtn || !indicator) return;
+            
+            if (audioType === 'voice') {
+                voiceBtn.classList.add('tab-active');
+                beepBtn.classList.remove('tab-active');
+                indicator.style.transform = 'translateX(0%)';
+            } else {
+                voiceBtn.classList.remove('tab-active');
+                beepBtn.classList.add('tab-active');
+                indicator.style.transform = 'translateX(100%)';
             }
         }
 
@@ -862,8 +944,47 @@
             }
         }
         
-        function speak(text) { 
-            speechManager.speak(text, voiceEnabled);
+        function speak(text) {
+            if (!voiceEnabled) return;
+            
+            console.log('speak() called with:', text, 'audioType:', audioType); // Debug
+            
+            if (audioType === 'beep') {
+                // Different beep patterns for different announcements
+                if (text.match(/^\d+$/)) {
+                    // Countdown numbers: short high beep
+                    console.log('Countdown beep');
+                    playBeep(1200, 80);
+                } else if (text.includes('Rest')) {
+                    // Rest period: low beep
+                    console.log('Rest beep');
+                    playBeep(400, 150);
+                } else if (text.includes('Begin') || text.includes('Start')) {
+                    // Exercise start: double beep
+                    console.log('Begin beep');
+                    playBeep(800, 150);
+                    setTimeout(() => playBeep(800, 150), 200);
+                } else if (text.toLowerCase().includes('complete') || text.toLowerCase().includes('amazing')) {
+                    // Workout complete: FAST energetic victory beeps! 🎉
+                    console.log('VICTORY BEEPS! Text was:', text);
+                    playBeep(700, 120);  // Quick ascending melody
+                    setTimeout(() => {
+                        console.log('Second beep playing');
+                        playBeep(900, 120);
+                    }, 150);
+                    setTimeout(() => {
+                        console.log('Third beep playing');
+                        playBeep(1100, 180); // Longer final note
+                    }, 300);
+                } else {
+                    // Default: single beep
+                    console.log('Default beep for:', text);
+                    playBeep(800, 120);
+                }
+            } else {
+                // Use voice
+                speechManager.speak(text, voiceEnabled);
+            }
         }
         
         function updateProgress(percent, fastRefill = false, fastReset = false) { 
