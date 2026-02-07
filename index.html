@@ -164,7 +164,7 @@
             header { padding-top: 1.5rem !important; margin-bottom: 0.5rem !important; }
             .nav-container { margin-bottom: 1rem !important; margin-left: 1.5rem !important; margin-right: 1.5rem !important; }
             #time-left { font-size: 4.5rem !important; }
-            #current-exercise { font-size: 1.1rem !important; }
+            #current-exercise { font-size: 1.5rem !important; }
             .progress-svg-container { max-width: 260px !important; }
             .media-controls { margin-top: 0.5rem !important; gap: 1rem !important; }
             .exercise-label-container { height: 52px !important; }
@@ -173,22 +173,22 @@
 
         @media (max-width: 400px) {
             .progress-svg-container { 
-                max-width: 280px !important; 
+                max-width: 340px !important; 
             }
             .exercise-label-container {
-                width: 150px !important;
+                width: 220px !important;
             }
             #current-exercise {
-                font-size: 1.35rem !important;
+                font-size: 1.5rem !important;
             }
         }
 
         .exercise-label-container {
-            height: 64px;
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 200px;
+            width: 240px;
             overflow: hidden;
         }
         
@@ -233,21 +233,21 @@
         <div class="view-stack">
             <div id="view-timer" class="tab-view active pb-8 flex flex-col gap-6 pt-8 justify-center">
                 <div class="relative w-full flex items-center justify-center px-4">
-                    <div id="visual-pulse" class="absolute w-64 h-64 rounded-full bg-blue-500/10 blur-[80px] opacity-0 transition-opacity duration-500"></div>
-                    <div class="progress-svg-container relative w-full max-w-[320px] aspect-square flex items-center justify-center">
+                    <div id="visual-pulse" class="absolute w-80 h-80 rounded-full bg-blue-500/10 blur-[80px] opacity-0 transition-opacity duration-500"></div>
+                    <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
                             <circle class="text-white/5" stroke-width="12" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
                             <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="12" stroke-dasharray="930" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
                         </svg>
                         <div class="relative z-10 flex flex-col items-center justify-center text-center select-none p-4 w-full">
                             <div class="exercise-label-container">
-                                <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase text-2xl">Get Ready</span>
+                                <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase text-3xl">Get Ready</span>
                             </div>
-                            <span id="time-left" class="text-[5.5rem] font-black tracking-tighter tabular-nums leading-none mt-1">00:00</span>
+                            <span id="time-left" class="text-[5rem] font-black tracking-tighter tabular-nums leading-none mt-1">00:00</span>
                             <div class="mt-3 flex flex-col items-center min-h-[68px]">
-                                <span id="round-display" class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Ready</span>
-                                <span id="circuit-display" class="text-[9px] font-bold text-blue-500/50 uppercase tracking-[0.2em] mt-1"> </span>
-                                <span id="total-time-display" class="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300">Total: --:--</span>
+                                <span id="circuit-display" class="text-sm font-bold text-blue-500/50 uppercase tracking-[0.2em]"> </span>
+                                <span id="round-display" class="text-sm font-bold text-white/30 uppercase tracking-[0.2em] mt-1">Ready</span>
+                                <span id="total-time-display" class="text-sm font-bold text-white/60 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300">Total: --:--</span>
                             </div>
                         </div>
                     </div>
@@ -304,7 +304,7 @@
                     <!-- Exercise List - SECOND -->
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
                         <label class="text-[10px] font-black text-white/40 uppercase tracking-widest">Exercise List</label>
-                        <textarea id="input-exercises" rows="3" placeholder="Exercise:duration (e.g., Push ups:30)&#10;Or just exercise name for default work time" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-base focus:ring-2 focus:ring-blue-500/50 outline-none resize-none placeholder:text-white/20">Jumping jacks:30, Push ups:30, Crunches:30, Walk outs, Squats, Mountain climbers</textarea>
+                        <textarea id="input-exercises" rows="3" placeholder="Exercise:duration (e.g., Push ups:30)&#10;Or just exercise name for default work time" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-base focus:ring-2 focus:ring-blue-500/50 outline-none resize-none placeholder:text-white/20">Jumping jacks, Push ups:30, Crunches, Walk outs, Squats, Mountain climbers</textarea>
                         <div class="flex items-center gap-2 text-[9px] text-white/30">
                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                             <span>Separate with commas. Add :seconds for custom duration</span>
@@ -576,7 +576,7 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, exerciseObjects = [];
+        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, exerciseObjects = [];
 
         const timeLeftEl = document.getElementById('time-left');
         const roundDisplayEl = document.getElementById('round-display');
@@ -698,6 +698,7 @@
                 el.addEventListener('input', () => {
                     saveSettings();
                     updateTotalTimeDisplay();
+                    updateCountsDisplay();
                 });
             });
         }
@@ -1040,11 +1041,24 @@
             return totalTime;
         }
         
-        function updateTotalTimeDisplay() {
-            const totalSeconds = calculateTotalTime();
+        function updateTotalTimeDisplay(secondsOverride = null) {
+            // If a specific time is provided (during workout), use it. 
+            // Otherwise calculate from settings (during setup).
+            const totalSeconds = secondsOverride !== null ? secondsOverride : calculateTotalTime();
+            
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             totalTimeDisplayEl.innerText = `Total: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function updateCountsDisplay() {
+            const exercises = parseExercises();
+            const totalCircuits = parseInt(inputRounds.value) || 1;
+            const count = exercises.length || 0;
+            
+            // Always show the counts based on current settings
+            roundDisplayEl.innerText = count > 0 ? `Exercise 1 / ${count}` : 'Ready';
+            circuitDisplayEl.innerText = count > 0 ? `Circuit 1 / ${totalCircuits}` : ' ';
         }
         
         function getIntervalData(index) { 
@@ -1072,10 +1086,11 @@
             if (phase === 'prepare') {
                 exerciseTextEl.innerText = "Get Ready";
                 const info = getIntervalData(0);
+                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${exerciseObjects.length}`;
+                circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
                 nextUpContainer.classList.remove('translate-y-2');
-                totalTimeDisplayEl.style.opacity = '1';
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
                 exerciseTextEl.innerText = "Rest";
@@ -1083,14 +1098,12 @@
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
                 nextUpContainer.classList.remove('translate-y-2');
-                totalTimeDisplayEl.style.opacity = '0';
                 speak(`Rest. Next is ${info.exercise.name}.`);
             } else {
                 const info = getIntervalData(globalIntervalIndex);
                 exerciseTextEl.innerText = info.exercise.name;
                 roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${exerciseObjects.length}`;
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
-                totalTimeDisplayEl.style.opacity = '0';
                 
                 if (!info.isLastOverall) {
                     nextExerciseNameEl.innerText = "Rest";
@@ -1110,6 +1123,10 @@
             if (secondsRemaining > 0) {
                 secondsRemaining--;
                 timeLeftEl.innerText = formatTime(secondsRemaining);
+                
+                if (totalTimeRemaining > 0) totalTimeRemaining--;
+                updateTotalTimeDisplay(totalTimeRemaining);
+                
                 updateProgress((secondsRemaining / totalPhaseSeconds) * 100);
                 if (secondsRemaining <= 3 && secondsRemaining > 0) speak(secondsRemaining.toString());
             } else { nextPhase(); }
@@ -1117,6 +1134,14 @@
 
         function nextPhase() {
             if (!timer) return;
+            
+            // If skipping manually (time left on clock), deduct it from total remaining
+            if (secondsRemaining > 0) {
+                totalTimeRemaining -= secondsRemaining;
+                if (totalTimeRemaining < 0) totalTimeRemaining = 0;
+                updateTotalTimeDisplay(totalTimeRemaining);
+            }
+            
             if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
             else if (currentPhase === 'work') { if (getIntervalData(globalIntervalIndex).isLastOverall) { completeWorkout(); return; } currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
             else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; }
@@ -1151,6 +1176,7 @@
             currentPhase = prep > 0 ? 'prepare' : 'work';
             totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
             secondsRemaining = totalPhaseSeconds;
+            totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
             updateProgress(100, true); // Fast refill - Set initial progress to full
@@ -1171,6 +1197,7 @@
             if (isPaused) {
                 await wakeLockManager.disable();
                 speechManager.cancel();
+                btnStart.innerText = "Resume";
             } else {
                 await wakeLockManager.enable();
             }
@@ -1218,6 +1245,7 @@
             progressCircle.classList.add('text-yellow-300');
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
+            btnStart.innerText = "Start";
             btnStart.classList.remove('hidden'); 
             btnPause.classList.add('hidden'); 
             speak("Workout complete! Great job!"); 
@@ -1252,11 +1280,9 @@
             exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'pulse-text');
             exerciseTextEl.classList.add('text-blue-400');
             timeLeftEl.innerText = '00:00';
-            roundDisplayEl.innerText = 'Ready';
-            circuitDisplayEl.innerText = ' ';
+            updateCountsDisplay();
             
             // Reset total time display
-            totalTimeDisplayEl.style.opacity = '1';
             updateTotalTimeDisplay();
             
             // Hide "Next Up" section
@@ -1264,6 +1290,7 @@
             nextUpContainer.classList.add('translate-y-2');
             
             // Reset buttons
+            btnStart.innerText = "Start";
             btnStart.classList.remove('hidden');
             btnPause.classList.add('hidden');
             
@@ -1292,6 +1319,7 @@
             setupAutoSave();
             timeLeftEl.innerText = formatTime(0);
             updateTotalTimeDisplay();
+            updateCountsDisplay();
         };
 
         window.addEventListener('beforeunload', async () => {
