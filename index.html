@@ -27,6 +27,7 @@
             align-items: center;
             justify-content: center;
             touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .apple-glass {
@@ -107,7 +108,13 @@
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, background-color 0.2s;
         }
 
-        .ios-button:active { transform: scale(0.92); opacity: 0.8; }
+        .ios-button:active, .ios-button.is-pressed { transform: scale(0.92); opacity: 0.8; }
+
+        /* Pressed states for specific buttons */
+        #btn-start.is-pressed, #btn-pause.is-pressed { background-color: #d1d5db; }
+        #btn-reset.is-pressed, #btn-skip.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
+        #btn-mute.is-pressed { background-color: rgba(255, 255, 255, 0.15); }
+        .spinner-btn.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
 
         @keyframes pulseBig {
             0%, 100% { 
@@ -214,7 +221,7 @@
             <div class="flex flex-col gap-1 min-w-[140px]">
                 <span class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Interval Timer</span>
             </div>
-            <button id="btn-mute" onclick="toggleMute()" class="flex items-center justify-center p-3 h-10 w-10 rounded-2xl apple-glass border-white/5 shadow-xl">
+            <button id="btn-mute" onclick="toggleMute()" class="ios-button flex items-center justify-center p-3 h-10 w-10 rounded-2xl apple-glass border-white/5 shadow-xl">
                 <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
@@ -261,18 +268,18 @@
                 </div>
 
                 <div class="media-controls w-full px-12 flex items-center justify-center gap-6 mt-2">
-                    <button id="btn-reset" class="ios-button h-16 w-16 bg-white/5 active:bg-white/20 text-white/70 active:text-white rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
+                    <button id="btn-reset" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
                         Reset
                     </button>
                     <div class="relative h-20 w-20">
-                        <button id="btn-start" class="ios-button absolute inset-0 bg-white active:bg-gray-300 text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-sm uppercase tracking-wide">
+                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-sm uppercase tracking-wide">
                             Start
                         </button>
-                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white active:bg-gray-300 text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-xs uppercase tracking-wide">
+                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-xs uppercase tracking-wide">
                             Pause
                         </button>
                     </div>
-                    <button onclick="nextPhase()" class="ios-button h-16 w-16 bg-white/5 active:bg-white/20 text-white/70 active:text-white rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
+                    <button id="btn-skip" onclick="nextPhase()" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
                         Skip
                     </button>
                 </div>
@@ -330,7 +337,7 @@
                                         class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums">
                                 </span>
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startDecrement('input-rounds'); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')"
@@ -339,7 +346,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startIncrement('input-rounds'); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')"
@@ -366,7 +373,7 @@
                                     onblur="handleTimeBlur('input-prepare')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)"
@@ -375,7 +382,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)"
@@ -399,7 +406,7 @@
                                     onblur="handleTimeBlur('input-work')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeDecrement('input-work', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)"
@@ -408,7 +415,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeIncrement('input-work', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)"
@@ -432,7 +439,7 @@
                                     onblur="handleTimeBlur('input-rest')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeDecrement('input-rest', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)"
@@ -441,7 +448,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <button 
-                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                                    class="spinner-btn ios-button w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 transition-all"
                                     ontouchstart="startTimeIncrement('input-rest', event); event.preventDefault();"
                                     ontouchend="stopAdjustment()"
                                     onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)"
@@ -1318,6 +1325,23 @@
         });
         btnPause.addEventListener('click', togglePause);
         document.getElementById('btn-reset').addEventListener('click', resetTimer);
+
+        // Generic Pointer Events Handler for consistent button feedback across iOS/Android/PC
+        document.querySelectorAll('.ios-button').forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                btn.classList.add('is-pressed');
+                try { btn.setPointerCapture(e.pointerId); } catch(e){}
+            });
+            
+            const clear = (e) => {
+                btn.classList.remove('is-pressed');
+                try { btn.releasePointerCapture(e.pointerId); } catch(e){}
+            };
+            
+            ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(evt => {
+                btn.addEventListener(evt, clear);
+            });
+        });
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
