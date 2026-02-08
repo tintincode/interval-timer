@@ -242,7 +242,7 @@
 
     <div class="max-w-md w-full h-full flex flex-col relative overflow-hidden">
         
-        <header class="flex justify-between items-center px-8 pt-10 mb-3 flex-shrink-0">
+        <header class="flex justify-between items-center px-4 md:px-8 pt-10 mb-3 flex-shrink-0">
             <div class="flex flex-col gap-1 min-w-[140px]">
                 <span class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Interval Timer</span>
             </div>
@@ -309,7 +309,7 @@
                 </div>
             </div>
 
-            <div id="view-settings" class="tab-view px-8 pb-10">
+            <div id="view-settings" class="tab-view px-4 md:px-8 pb-10">
                 <div class="space-y-4 pt-4">
                     <!-- Audio Settings - FIRST -->
                     <div class="apple-glass rounded-[24px] p-5 space-y-3">
@@ -804,7 +804,7 @@
             div.innerHTML = `
                 <div class="slide-track flex w-full h-full touch-pan-y transition-transform duration-200 ease-out">
                     <div class="row-content w-full flex-shrink-0 flex items-center bg-white/5 py-3 px-4">
-                        <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
+                        <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
                         
                         <input type="text" value="${formattedDuration}" placeholder="--:--" onclick="this.select()" class="exercise-duration-input w-14 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-medium mx-3">
 
@@ -960,6 +960,9 @@
         function handleDragStart(e) {
             const handle = e.target.closest('.drag-handle');
             if (!handle) return;
+            
+            // Prevent text selection on desktop
+            if (e.type === 'mousedown') e.preventDefault();
             
             const row = handle.closest('.exercise-row');
             if (!row) return;
