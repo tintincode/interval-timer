@@ -33,7 +33,7 @@
         .apple-glass {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .view-stack {
@@ -241,7 +241,6 @@
         <div class="view-stack">
             <div id="view-timer" class="tab-view active pb-8 flex flex-col gap-6 pt-8 justify-center">
                 <div class="relative w-full flex items-center justify-center px-4">
-                    <div id="visual-pulse" class="absolute w-80 h-80 rounded-full bg-blue-500/10 blur-[80px] opacity-0 transition-opacity duration-500"></div>
                     <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
                             <circle class="text-white/5" stroke-width="12" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
@@ -261,7 +260,7 @@
                     </div>
                 </div>
 
-                <div id="next-up-container" class="flex flex-col items-center justify-center opacity-0 transition-all duration-500 transform translate-y-2">
+                <div id="next-up-container" class="flex flex-col items-center justify-center opacity-0 transition-all duration-500">
                     <div class="flex items-center gap-2">
                         <span class="text-[8px] font-black text-white/20 uppercase tracking-[0.5em]">Next</span>
                         <span id="next-exercise-name" class="text-lg font-bold text-white/60 uppercase tracking-widest text-center">---</span>
@@ -269,7 +268,7 @@
                 </div>
 
                 <div class="media-controls w-full px-12 flex items-center justify-center gap-6 mt-2">
-                    <button id="btn-reset" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
+                    <button id="btn-reset" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
                         Reset
                     </button>
                     <div class="relative h-20 w-20">
@@ -280,7 +279,7 @@
                             Pause
                         </button>
                     </div>
-                    <button id="btn-skip" onclick="nextPhase()" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
+                    <button id="btn-skip" onclick="nextPhase()" class="ios-button h-16 w-16 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-[10px] uppercase tracking-wider transition-all">
                         Skip
                     </button>
                 </div>
@@ -1058,6 +1057,18 @@
             // Always show the counts based on current settings
             roundDisplayEl.innerText = count > 0 ? `Exercise 1 / ${count}` : 'Ready';
             circuitDisplayEl.innerText = count > 0 ? `Circuit 1 / ${totalCircuits}` : ' ';
+            
+            // Show first exercise as "Next" when stopped
+            if (!timer && !isPaused) {
+                if (count > 0) {
+                    nextExerciseNameEl.innerText = exercises[0].name;
+                    nextUpContainer.classList.remove('opacity-0');
+                    nextUpContainer.classList.add('opacity-100');
+                } else {
+                    nextUpContainer.classList.remove('opacity-100');
+                    nextUpContainer.classList.add('opacity-0');
+                }
+            }
         }
         
         function getIntervalData(index) { 
@@ -1089,14 +1100,12 @@
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
-                nextUpContainer.classList.remove('translate-y-2');
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
                 exerciseTextEl.innerText = "Rest";
                 const info = getIntervalData(globalIntervalIndex + 1);
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
-                nextUpContainer.classList.remove('translate-y-2');
                 speak(`Rest. Next is ${info.exercise.name}.`);
             } else {
                 const info = getIntervalData(globalIntervalIndex);
@@ -1107,10 +1116,8 @@
                 if (!info.isLastOverall) {
                     nextExerciseNameEl.innerText = "Rest";
                     nextUpContainer.classList.replace('opacity-0', 'opacity-100');
-                    nextUpContainer.classList.remove('translate-y-2');
                 } else {
                     nextUpContainer.classList.replace('opacity-100', 'opacity-0');
-                    nextUpContainer.classList.add('translate-y-2');
                 }
                 speak(info.exercise.name + ". Begin.");
                 //speak(info.exercise.name + ". Start.");
@@ -1152,7 +1159,9 @@
                 if (totalTimeRemaining > 0) totalTimeRemaining--;
                 updateTotalTimeDisplay(totalTimeRemaining);
                 
-                if (secondsRemaining <= 3 && secondsRemaining > 0) speak(secondsRemaining.toString());
+                if (secondsRemaining <= 3 && secondsRemaining > 0) {
+                    speak(secondsRemaining.toString());
+                }
             }
         }
 
@@ -1320,15 +1329,12 @@
             exerciseTextEl.innerText = 'Get Ready';
             exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'pulse-text');
             exerciseTextEl.classList.add('text-blue-400');
+            
             timeLeftEl.innerText = '00:00';
             updateCountsDisplay();
             
             // Reset total time display
             updateTotalTimeDisplay();
-            
-            // Hide "Next Up" section
-            nextUpContainer.classList.add('opacity-0');
-            nextUpContainer.classList.add('translate-y-2');
             
             // Reset buttons
             btnStart.innerText = "Start";
