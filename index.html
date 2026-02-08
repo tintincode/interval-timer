@@ -62,9 +62,10 @@
         }
 
         .progress-ring__circle {
-            transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+            transition: stroke 0.4s ease;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
+            will-change: stroke-dashoffset;
         }
 
         .nav-container {
@@ -583,7 +584,7 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, exerciseObjects = [];
+        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, exerciseObjects = [], phaseEndTime = 0, pausedTimeRemainingMs = 0;
 
         const timeLeftEl = document.getElementById('time-left');
         const roundDisplayEl = document.getElementById('round-display');
@@ -996,26 +997,9 @@
             }
         }
         
-        function updateProgress(percent, fastRefill = false, fastReset = false) { 
-            if (fastReset && percent === 0) {
-                // Fast reset: use same speed as refill for consistency
-                progressCircle.style.transition = 'stroke-dashoffset 0.15s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease';
-                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
-                // Restore normal smooth draining transition after animation completes
-                setTimeout(() => {
-                    progressCircle.style.transition = 'stroke-dashoffset 1s linear, stroke 0.4s ease';
-                }, 150);
-            } else if (fastRefill && percent === 100) {
-                // Fast refill: temporarily use faster transition
-                progressCircle.style.transition = 'stroke-dashoffset 0.15s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease';
-                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
-                // Restore normal smooth draining transition after animation completes
-                setTimeout(() => {
-                    progressCircle.style.transition = 'stroke-dashoffset 1s linear, stroke 0.4s ease';
-                }, 150);
-            } else {
-                progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
-            }
+        function updateProgress(percent) { 
+            // Direct update for smooth animation via requestAnimationFrame
+            progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
         }
         function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
         function parseExercises() { 
@@ -1125,22 +1109,40 @@
             }
         }
 
-        function tick() {
+        function runTimerLoop() {
             if (isPaused) return;
-            if (secondsRemaining > 0) {
-                secondsRemaining--;
+            
+            const now = Date.now();
+            const timeLeftMs = phaseEndTime - now;
+            
+            if (timeLeftMs <= 0) {
+                nextPhase();
+                return;
+            }
+
+            // Smooth progress update
+            const percent = (timeLeftMs / (totalPhaseSeconds * 1000)) * 100;
+            updateProgress(percent);
+
+            // Integer second updates
+            const currentSeconds = Math.ceil(timeLeftMs / 1000);
+            if (currentSeconds !== secondsRemaining) {
+                secondsRemaining = currentSeconds;
                 timeLeftEl.innerText = formatTime(secondsRemaining);
                 
                 if (totalTimeRemaining > 0) totalTimeRemaining--;
                 updateTotalTimeDisplay(totalTimeRemaining);
                 
-                updateProgress((secondsRemaining / totalPhaseSeconds) * 100);
                 if (secondsRemaining <= 3 && secondsRemaining > 0) speak(secondsRemaining.toString());
-            } else { nextPhase(); }
+            }
+            
+            timer = requestAnimationFrame(runTimerLoop);
         }
 
         function nextPhase() {
             if (!timer) return;
+            // If manually skipping, cancel current loop frame to prevent double-fire
+            if (timer) cancelAnimationFrame(timer);
             
             // If skipping manually (time left on clock), deduct it from total remaining
             if (secondsRemaining > 0) {
@@ -1153,9 +1155,18 @@
             else if (currentPhase === 'work') { if (getIntervalData(globalIntervalIndex).isLastOverall) { completeWorkout(); return; } currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
             else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; }
             secondsRemaining = totalPhaseSeconds;
+            
             setVisualState(currentPhase);
             timeLeftEl.innerText = formatTime(secondsRemaining);
-            updateProgress(100, true); // Fast refill
+            updateProgress(100);
+            
+            if (!isPaused) {
+                phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
+                timer = requestAnimationFrame(runTimerLoop);
+            } else {
+                // If paused, prepare the time for when we eventually resume
+                pausedTimeRemainingMs = totalPhaseSeconds * 1000;
+            }
         }
 
         async function startWorkout() {
@@ -1177,17 +1188,20 @@
             currentPhase = prep > 0 ? 'prepare' : 'work';
             totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
             secondsRemaining = totalPhaseSeconds;
+            phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
             totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
             updateProgress(100, true); // Fast refill - Set initial progress to full
+            updateProgress(100); // Set initial progress to full
             
             setVisualState(currentPhase);
             btnStart.classList.add('hidden');
             btnPause.classList.remove('hidden');
             
             // Start timer AFTER displaying initial state
-            timer = setInterval(tick, 1000);
+            if (timer) cancelAnimationFrame(timer);
+            timer = requestAnimationFrame(runTimerLoop);
             switchTab('timer');
         }
 
@@ -1196,11 +1210,18 @@
             isPaused = !isPaused; 
             
             if (isPaused) {
+                cancelAnimationFrame(timer);
+                // Calculate exact remaining time to preserve precision
+                pausedTimeRemainingMs = phaseEndTime - Date.now();
+                
                 await wakeLockManager.disable();
                 speechManager.cancel();
                 btnStart.innerText = "Resume";
             } else {
+                // Resume using exact stored time
+                phaseEndTime = Date.now() + pausedTimeRemainingMs;
                 await wakeLockManager.enable();
+                timer = requestAnimationFrame(runTimerLoop);
             }
             
             btnStart.classList.toggle('hidden', !isPaused); 
@@ -1209,6 +1230,7 @@
         
         async function completeWorkout() { 
             clearInterval(timer); 
+            cancelAnimationFrame(timer); 
             timer = null; 
             
             await wakeLockManager.disable();
@@ -1224,7 +1246,7 @@
             exerciseTextEl.classList.add('pulse-text');
             
             // Make the circle full (100%) so entire circle glows
-            updateProgress(100, true); // Fast refill
+            updateProgress(100);
             
             // Make progress circle pulse
             progressCircle.classList.add('pulse-circle-stroke');
@@ -1261,6 +1283,7 @@
             // Stop and clear timer
             if (timer) {
                 clearInterval(timer);
+                cancelAnimationFrame(timer);
                 timer = null;
             }
             
@@ -1298,7 +1321,7 @@
             // Reset progress circle
             progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
-            updateProgress(0, false, true); // Fast reset - instant clear
+            updateProgress(0);
             
             // Remove celebration glow
             const completionGlow = document.getElementById('completion-glow');
