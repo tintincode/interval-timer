@@ -865,12 +865,22 @@
             let currentTranslate = 0;
             let isDragging = false;
             let isOpen = false;
+            let animationFrame = null;
             
             const startDrag = (clientX, clientY) => {
                 startX = clientX;
                 startY = clientY;
                 isDragging = true;
                 element.style.transition = 'none';
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+            };
+
+            const updatePosition = () => {
+                element.style.transform = `translateX(${currentTranslate}px)`;
+                animationFrame = null;
             };
 
             const moveDrag = (clientX, clientY, e) => {
@@ -884,17 +894,27 @@
                     if (!isOpen && diffX > 0) return;
 
                     if (e.cancelable) e.preventDefault(); // Stop vertical scrolling
-                    
                     const baseTranslate = isOpen ? -100 : 0;
-                    currentTranslate = Math.max(Math.min(baseTranslate + diffX, 0), -100); 
-                    element.style.transform = `translateX(${currentTranslate}px)`;
+                    let newTranslate = baseTranslate + diffX;
+                    newTranslate = Math.max(Math.min(newTranslate, 0), -100); 
+                    
+                    if (newTranslate !== currentTranslate) {
+                        currentTranslate = newTranslate;
+                        if (!animationFrame) {
+                            animationFrame = requestAnimationFrame(updatePosition);
+                        }
+                    }
                 }
             };
 
             const endDrag = () => {
                 if (!isDragging) return;
                 isDragging = false;
-                element.style.transition = 'transform 0.2s ease-out';
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+                element.style.transition = 'transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)';
                 if (currentTranslate < -50) {
                     element.style.transform = 'translateX(-100px)'; // Keep open
                     isOpen = true;
@@ -1400,6 +1420,20 @@
             // Direct update for smooth animation via requestAnimationFrame
             progressCircle.style.strokeDashoffset = CIRCUMFERENCE - (percent / 100 * CIRCUMFERENCE);
         }
+
+        function refillProgress() {
+            // Temporarily enable transition for smooth refill
+            progressCircle.style.transition = 'stroke-dashoffset 0.05s ease-out, stroke 0.4s ease';
+            
+            // Set to full
+            progressCircle.style.strokeDashoffset = '0';
+            
+            // Remove transition after animation
+            setTimeout(() => {
+                progressCircle.style.transition = 'stroke 0.4s ease';
+            }, 50);
+        }
+
         function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
         function parseExercises() { 
             const defaultWork = getSecondsFromTimeInput('input-work'); 
@@ -1437,6 +1471,13 @@
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             totalTimeDisplayEl.innerText = `Total: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Hide total time if 0 and not currently running a workout (setup mode)
+            if (secondsOverride === null && totalSeconds === 0) {
+                totalTimeDisplayEl.classList.add('opacity-0');
+            } else {
+                totalTimeDisplayEl.classList.remove('opacity-0');
+            }
         }
         
         function updateCountsDisplay() {
@@ -1445,8 +1486,13 @@
             const count = exercises.length || 0;
             
             // Always show the counts based on current settings
-            roundDisplayEl.innerText = count > 0 ? `Exercise 1 / ${count}` : 'Ready';
-            circuitDisplayEl.innerText = count > 0 ? `Circuit 1 / ${totalCircuits}` : ' ';
+            if (count > 0) {
+                roundDisplayEl.innerText = `Exercise 1 / ${count}`;
+                circuitDisplayEl.innerText = `Circuit 1 / ${totalCircuits}`;
+            } else {
+                roundDisplayEl.innerText = 'Add Exercises';
+                circuitDisplayEl.innerText = ' ';
+            }
             
             // Show first exercise as "Next" when stopped
             if (!timer && !isPaused) {
@@ -1574,7 +1620,7 @@
             
             setVisualState(currentPhase);
             timeLeftEl.innerText = formatTime(secondsRemaining);
-            updateProgress(100);
+            refillProgress();
             
             if (!isPaused) {
                 phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
@@ -1608,7 +1654,6 @@
             totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
-            updateProgress(100, true); // Fast refill - Set initial progress to full
             updateProgress(100); // Set initial progress to full
             
             setVisualState(currentPhase);
@@ -1662,7 +1707,7 @@
             exerciseTextEl.classList.add('pulse-text');
             
             // Make the circle full (100%) so entire circle glows
-            updateProgress(100);
+            refillProgress();
             
             // Make progress circle pulse
             progressCircle.classList.add('pulse-circle-stroke');
@@ -1734,7 +1779,7 @@
             // Reset progress circle
             progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
-            updateProgress(0);
+            updateProgress(100);
             
             // Remove celebration glow
             const completionGlow = document.getElementById('completion-glow');
