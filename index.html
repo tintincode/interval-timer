@@ -520,8 +520,11 @@
         const wakeLockManager = new WakeLockManager();
 
         document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'visible' && timer && !isPaused) {
-                await wakeLockManager.reEnable();
+            if (document.visibilityState === 'hidden') {
+                // Auto-pause when backgrounded to prevent battery drain and stop workout
+                if (timer && !isPaused) {
+                    togglePause();
+                }
             }
         });
 
@@ -585,6 +588,11 @@
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
         let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, exerciseObjects = [], phaseEndTime = 0, pausedTimeRemainingMs = 0;
+        
+        // Frame throttling settings (30 FPS)
+        const TARGET_FPS = 30;
+        const FRAME_INTERVAL = 1000 / TARGET_FPS;
+        let lastFrameTime = 0;
 
         const timeLeftEl = document.getElementById('time-left');
         const roundDisplayEl = document.getElementById('round-display');
@@ -1112,10 +1120,21 @@
         function runTimerLoop() {
             if (isPaused) return;
             
+            // Schedule next frame immediately
+            timer = requestAnimationFrame(runTimerLoop);
+            
             const now = Date.now();
+            const elapsed = now - lastFrameTime;
+            
+            // Throttle to TARGET_FPS
+            if (elapsed < FRAME_INTERVAL) return;
+            
+            lastFrameTime = now - (elapsed % FRAME_INTERVAL);
+            
             const timeLeftMs = phaseEndTime - now;
             
             if (timeLeftMs <= 0) {
+                cancelAnimationFrame(timer);
                 nextPhase();
                 return;
             }
@@ -1135,8 +1154,6 @@
                 
                 if (secondsRemaining <= 3 && secondsRemaining > 0) speak(secondsRemaining.toString());
             }
-            
-            timer = requestAnimationFrame(runTimerLoop);
         }
 
         function nextPhase() {
