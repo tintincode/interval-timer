@@ -235,6 +235,15 @@
         .exercise-row.placeholder {
             opacity: 0 !important;
         }
+        
+        .delete-btn {
+            transition: all 0.2s;
+        }
+        .delete-btn:active {
+            transform: scale(0.9);
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
     </style>
 </head>
 <body>
@@ -548,15 +557,6 @@
 
         const wakeLockManager = new WakeLockManager();
 
-        document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'hidden') {
-                // Auto-pause when backgrounded to prevent battery drain and stop workout
-                if (timer && !isPaused) {
-                    togglePause();
-                }
-            }
-        });
-
         // ============================================
         // SPEECH SYNTHESIS MANAGER (iOS-Compatible)
         // ============================================
@@ -799,22 +799,16 @@
             const formattedDuration = (duration !== '' && duration !== null) ? formatToMMSS(duration) : '';
             
             // Add transition classes for entry animation
-            div.className = 'exercise-row relative overflow-hidden rounded-xl transition-all duration-300 ease-out opacity-0 translate-y-2 max-h-0';
+            div.className = 'exercise-row relative overflow-hidden rounded-xl transition-all duration-300 ease-out opacity-0 translate-y-2 max-h-0 select-none';
             div.innerHTML = `
-                <div class="slide-track flex w-full h-full touch-pan-y transition-transform duration-200 ease-out">
-                    <div class="row-content w-full flex-shrink-0 flex items-center bg-white/5 py-3 px-4">
-                        <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
-                        
-                        <input type="text" value="${formattedDuration}" placeholder="--:--" onclick="this.select()" class="exercise-duration-input w-14 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-medium mx-3">
+                <div class="row-content w-full flex items-center bg-white/5 py-3 px-4">
+                    <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
+                    
+                    <input type="text" value="${formattedDuration}" placeholder="--:--" onclick="this.select()" class="exercise-duration-input w-14 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-medium mx-3">
 
-                        <div class="drag-handle w-6 h-6 flex-shrink-0 flex items-center justify-center text-white/30 hover:text-white transition-all cursor-grab active:cursor-grabbing touch-none">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
-                        </div>
-                    </div>
-
-                    <div class="delete-action w-[100px] flex-shrink-0 bg-red-500 flex items-center justify-center">
-                        <button onclick="removeExerciseRow(this)" class="text-white font-bold text-xs uppercase tracking-wider h-full w-full flex items-center justify-center">Delete</button>
-                    </div>
+                    <button onclick="removeExerciseRow(this)" class="delete-btn w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
             `;
             container.appendChild(div);
@@ -827,12 +821,7 @@
                 });
             });
             
-            const slideTrack = div.querySelector('.slide-track');
-            setupSlideInteraction(slideTrack);
-            
-            const handle = div.querySelector('.drag-handle');
-            handle.addEventListener('touchstart', handleDragStart, {passive: false});
-            handle.addEventListener('mousedown', handleDragStart);
+            setupLongPressDrag(div);
             
             const inputs = div.querySelectorAll('input');
             inputs.forEach(input => {
@@ -856,89 +845,6 @@
                     });
                 }
             });
-        }
-
-        function setupSlideInteraction(element) {
-            let startX = 0;
-            let startY = 0;
-            let currentTranslate = 0;
-            let isDragging = false;
-            let isOpen = false;
-            let animationFrame = null;
-            
-            const startDrag = (clientX, clientY) => {
-                startX = clientX;
-                startY = clientY;
-                isDragging = true;
-                element.style.transition = 'none';
-                if (animationFrame) {
-                    cancelAnimationFrame(animationFrame);
-                    animationFrame = null;
-                }
-            };
-
-            const updatePosition = () => {
-                element.style.transform = `translateX(${currentTranslate}px)`;
-                animationFrame = null;
-            };
-
-            const moveDrag = (clientX, clientY, e) => {
-                if (!isDragging) return;
-                const diffX = clientX - startX;
-                const diffY = clientY - startY;
-                
-                // Ensure it's a horizontal swipe
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    // If closed, only allow sliding left (diffX < 0)
-                    if (!isOpen && diffX > 0) return;
-
-                    if (e.cancelable) e.preventDefault(); // Stop vertical scrolling
-                    const baseTranslate = isOpen ? -100 : 0;
-                    let newTranslate = baseTranslate + diffX;
-                    newTranslate = Math.max(Math.min(newTranslate, 0), -100); 
-                    
-                    if (newTranslate !== currentTranslate) {
-                        currentTranslate = newTranslate;
-                        if (!animationFrame) {
-                            animationFrame = requestAnimationFrame(updatePosition);
-                        }
-                    }
-                }
-            };
-
-            const endDrag = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                if (animationFrame) {
-                    cancelAnimationFrame(animationFrame);
-                    animationFrame = null;
-                }
-                element.style.transition = 'transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)';
-                if (currentTranslate < -50) {
-                    element.style.transform = 'translateX(-100px)'; // Keep open
-                    isOpen = true;
-                    currentTranslate = -100;
-                } else {
-                    element.style.transform = 'translateX(0)'; // Close
-                    isOpen = false;
-                    currentTranslate = 0;
-                }
-            };
-            
-            // Touch Events
-            element.addEventListener('touchstart', e => startDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
-            element.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX, e.touches[0].clientY, e), {passive: false});
-            element.addEventListener('touchend', endDrag);
-            
-            // Mouse Events (PC)
-            element.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-            window.addEventListener('mousemove', e => {
-                if (isDragging) {
-                    e.preventDefault(); // Prevent text selection
-                    moveDrag(e.clientX, e.clientY, e);
-                }
-            });
-            window.addEventListener('mouseup', endDrag);
         }
 
         function addNewExerciseRow() {
@@ -976,21 +882,69 @@
         let ghost = null;
         let dragOffsetY = 0;
 
-        function handleDragStart(e) {
-            const handle = e.target.closest('.drag-handle');
-            if (!handle) return;
+        function setupLongPressDrag(element) {
+            let timer = null;
+            let startX = 0;
+            let startY = 0;
+
+            const handleStart = (e) => {
+                if (e.target.closest('.delete-btn')) return;
+                
+                const isInput = e.target.tagName === 'INPUT';
+                const isTouch = e.type.startsWith('touch');
+                
+                // If mouse and not input, drag immediately
+                if (!isTouch && !isInput) {
+                     const clientX = e.clientX;
+                     const clientY = e.clientY;
+                     startDrag(element, clientX, clientY, e);
+                     e.preventDefault(); 
+                     return;
+                }
+                
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                startX = clientX;
+                startY = clientY;
+
+                timer = setTimeout(() => {
+                    startDrag(element, startX, startY, e);
+                }, 300);
+            };
+
+            const handleMove = (e) => {
+                if (!timer) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            };
+
+            const handleEnd = () => {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            };
+
+            element.addEventListener('touchstart', handleStart, {passive: true});
+            element.addEventListener('touchmove', handleMove, {passive: true});
+            element.addEventListener('touchend', handleEnd);
             
-            // Prevent text selection on desktop
-            if (e.type === 'mousedown') e.preventDefault();
-            
-            const row = handle.closest('.exercise-row');
-            if (!row) return;
-            
+            element.addEventListener('mousedown', handleStart);
+            element.addEventListener('mousemove', handleMove);
+            element.addEventListener('mouseup', handleEnd);
+            element.addEventListener('mouseleave', handleEnd);
+        }
+
+        function startDrag(row, clientX, clientY, originalEvent) {
             draggingRow = row;
             
-            // Calculate offset to keep ghost under finger relative to row top
             const rect = row.getBoundingClientRect();
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             dragOffsetY = clientY - rect.top;
             
             // Create Ghost
@@ -1000,16 +954,20 @@
             ghost.style.height = rect.height + 'px';
             ghost.style.top = rect.top + 'px';
             ghost.style.left = rect.left + 'px';
-            // Reset any slide transforms on the ghost
-            const ghostTrack = ghost.querySelector('.slide-track');
-            if (ghostTrack) ghostTrack.style.transform = 'none';
+            
+            // Disable inputs in ghost
+            ghost.querySelectorAll('input').forEach(i => i.setAttribute('disabled', 'true'));
+            
             document.body.appendChild(ghost);
             
             row.classList.add('placeholder');
             
-            // Prevent scrolling on touch
-            if (e.type === 'touchstart') {
-                document.body.style.overflow = 'hidden';
+            // Vibration
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            document.body.style.overflow = 'hidden';
+            
+            if (originalEvent.type.startsWith('touch')) {
                 document.addEventListener('touchmove', onDragMove, {passive: false});
                 document.addEventListener('touchend', onDragEnd);
             } else {
@@ -1562,21 +1520,21 @@
         function runTimerLoop() {
             if (isPaused) return;
             
-            // Schedule next frame immediately
-            timer = requestAnimationFrame(runTimerLoop);
-            
             const now = Date.now();
             const elapsed = now - lastFrameTime;
             
             // Throttle to TARGET_FPS
-            if (elapsed < FRAME_INTERVAL) return;
+            if (elapsed < FRAME_INTERVAL) {
+                timer = setTimeout(runTimerLoop, FRAME_INTERVAL - elapsed);
+                return;
+            }
             
             lastFrameTime = now - (elapsed % FRAME_INTERVAL);
             
             const timeLeftMs = phaseEndTime - now;
             
             if (timeLeftMs <= 0) {
-                cancelAnimationFrame(timer);
+                clearTimeout(timer);
                 nextPhase();
                 return;
             }
@@ -1598,12 +1556,14 @@
                     speak(secondsRemaining.toString());
                 }
             }
+            
+            timer = setTimeout(runTimerLoop, FRAME_INTERVAL);
         }
 
         function nextPhase() {
             if (!timer) return;
             // If manually skipping, cancel current loop frame to prevent double-fire
-            if (timer) cancelAnimationFrame(timer);
+            if (timer) clearTimeout(timer);
             
             // If skipping manually (time left on clock), deduct it from total remaining
             if (secondsRemaining > 0) {
@@ -1623,7 +1583,7 @@
             
             if (!isPaused) {
                 phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
-                timer = requestAnimationFrame(runTimerLoop);
+                runTimerLoop();
             } else {
                 // If paused, prepare the time for when we eventually resume
                 pausedTimeRemainingMs = totalPhaseSeconds * 1000;
@@ -1660,8 +1620,8 @@
             btnPause.classList.remove('hidden');
             
             // Start timer AFTER displaying initial state
-            if (timer) cancelAnimationFrame(timer);
-            timer = requestAnimationFrame(runTimerLoop);
+            if (timer) clearTimeout(timer);
+            runTimerLoop();
             switchTab('timer');
         }
 
@@ -1670,7 +1630,7 @@
             isPaused = !isPaused; 
             
             if (isPaused) {
-                cancelAnimationFrame(timer);
+                clearTimeout(timer);
                 // Calculate exact remaining time to preserve precision
                 pausedTimeRemainingMs = phaseEndTime - Date.now();
                 
@@ -1681,7 +1641,7 @@
                 // Resume using exact stored time
                 phaseEndTime = Date.now() + pausedTimeRemainingMs;
                 await wakeLockManager.enable();
-                timer = requestAnimationFrame(runTimerLoop);
+                runTimerLoop();
             }
             
             btnStart.classList.toggle('hidden', !isPaused); 
@@ -1690,7 +1650,7 @@
         
         async function completeWorkout() { 
             clearInterval(timer); 
-            cancelAnimationFrame(timer); 
+            clearTimeout(timer); 
             timer = null; 
             
             await wakeLockManager.disable();
@@ -1743,7 +1703,7 @@
             // Stop and clear timer
             if (timer) {
                 clearInterval(timer);
-                cancelAnimationFrame(timer);
+                clearTimeout(timer);
                 timer = null;
             }
             
