@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>Interval Timer</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -454,6 +454,30 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Cool Down -->
+                        <div class="grid grid-cols-[1fr_auto] gap-4 items-center py-1">
+                            <span class="text-sm font-semibold text-white/70">Cool Down</span>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="input-cooldown" 
+                                    value="00:00" 
+                                    data-seconds="0"
+                                    onclick="this.select()"
+                                    onblur="handleTimeBlur('input-cooldown')"
+                                    class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
+                                <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
+                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+                                    </button>
+                                    <div class="w-px h-4 bg-white/10"></div>
+                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Exercise List - SECOND -->
@@ -744,6 +768,7 @@
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
+                coolDownTime: getSecondsFromTimeInput('input-cooldown'),
                 voiceEnabled: voiceEnabled,
                 audioType: audioType
             };
@@ -776,6 +801,7 @@
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
+                coolDownTime: getSecondsFromTimeInput('input-cooldown'),
                 voiceEnabled: voiceEnabled,
                 audioType: audioType
             };
@@ -835,6 +861,7 @@
             setTimeInputSeconds('input-work', routine.workTime);
             setTimeInputSeconds('input-rest', routine.restTime);
             setTimeInputSeconds('input-prepare', routine.prepTime);
+            setTimeInputSeconds('input-cooldown', routine.coolDownTime || 0);
             inputRounds.value = routine.circuits;
             
             if (routine.voiceEnabled !== undefined) {
@@ -966,6 +993,7 @@
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
+                coolDownTime: getSecondsFromTimeInput('input-cooldown'),
                 voiceEnabled: voiceEnabled,
                 audioType: audioType
             };
@@ -999,6 +1027,9 @@
                     }
                     if (settings.prepTime !== undefined) {
                         setTimeInputSeconds('input-prepare', settings.prepTime);
+                    }
+                    if (settings.coolDownTime !== undefined) {
+                        setTimeInputSeconds('input-cooldown', settings.coolDownTime);
                     }
                     
                     inputRounds.value = settings.circuits || inputRounds.value;
@@ -1040,7 +1071,7 @@
         }
 
         function setupAutoSave() {
-            [inputWork, inputRest, inputRounds, inputPrepare].forEach(el => {
+            [inputWork, inputRest, inputRounds, inputPrepare, document.getElementById('input-cooldown')].forEach(el => {
                 el.addEventListener('input', () => {
                     saveSettings();
                     updateTotalTimeDisplay();
@@ -1704,13 +1735,14 @@
             const circuits = parseInt(inputRounds.value);
             const restTime = getSecondsFromTimeInput('input-rest');
             const prepTime = getSecondsFromTimeInput('input-prepare');
+            const coolDownTime = getSecondsFromTimeInput('input-cooldown');
             
             let totalWorkTime = 0;
             exercises.forEach(ex => {
                 totalWorkTime += ex.duration;
             });
             
-            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercises.length * circuits - 1));
+            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercises.length * circuits - 1)) + coolDownTime;
             
             return totalTime;
         }
@@ -1771,13 +1803,13 @@
         }
 
         function setVisualState(phase) {
-            const colors = { prepare: 'text-blue-500', work: 'text-emerald-500', rest: 'text-orange-500' };
-            const textColors = { prepare: 'text-blue-400', work: 'text-emerald-400', rest: 'text-orange-400' };
+            const colors = { prepare: 'text-blue-500', work: 'text-emerald-500', rest: 'text-orange-500', cooldown: 'text-teal-500' };
+            const textColors = { prepare: 'text-blue-400', work: 'text-emerald-400', rest: 'text-orange-400', cooldown: 'text-teal-400' };
             
-            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-yellow-300', 'text-yellow-400');
+            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-300', 'text-yellow-400');
             progressCircle.classList.add(colors[phase]);
             
-            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-yellow-300', 'text-yellow-400');
+            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-teal-400', 'text-yellow-300', 'text-yellow-400');
             exerciseTextEl.classList.add(textColors[phase]);
             
             
@@ -1795,6 +1827,12 @@
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
                 speak(`Rest. Next is ${info.exercise.name}.`);
+            } else if (phase === 'cooldown') {
+                exerciseTextEl.innerText = "Cool Down";
+                roundDisplayEl.innerText = "Cool Down";
+                nextExerciseNameEl.innerText = "Complete";
+                nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                speak("Cool Down");
             } else {
                 const info = getIntervalData(globalIntervalIndex);
                 exerciseTextEl.innerText = info.exercise.name;
@@ -1858,8 +1896,19 @@
             }
             
             if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
-            else if (currentPhase === 'work') { if (getIntervalData(globalIntervalIndex).isLastOverall) { completeWorkout(); return; } currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
-            else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; }
+            else if (currentPhase === 'work') { 
+                if (getIntervalData(globalIntervalIndex).isLastOverall) { 
+                    const coolDown = getSecondsFromTimeInput('input-cooldown');
+                    if (coolDown > 0) {
+                        currentPhase = 'cooldown';
+                        totalPhaseSeconds = coolDown;
+                    } else {
+                        completeWorkout(); return; 
+                    }
+                } else { currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
+            }
+            else if (currentPhase === 'cooldown') { completeWorkout(); return; }
+            else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; } // Rest -> Work
             secondsRemaining = totalPhaseSeconds;
             
             setVisualState(currentPhase);
@@ -1947,7 +1996,7 @@
             
             // Change text to soft pastel yellow
             exerciseTextEl.innerText = "Amazing!"; 
-            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-500', 'text-orange-500');
+            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-500', 'text-orange-500', 'text-teal-400');
             exerciseTextEl.classList.add('text-yellow-300');
             
             // Add pulsing to text
@@ -1972,7 +2021,7 @@
             }
             
             // Make progress circle soft yellow for completion
-            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-yellow-400');
+            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400');
             progressCircle.classList.add('text-yellow-300');
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
@@ -2008,7 +2057,7 @@
             
             // Reset UI - Status and Exercise
             exerciseTextEl.innerText = 'Get Ready';
-            exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'pulse-text');
+            exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-teal-400', 'pulse-text');
             exerciseTextEl.classList.add('text-blue-400');
             
             timeLeftEl.innerText = '00:00';
@@ -2023,7 +2072,7 @@
             btnPause.classList.add('hidden');
             
             // Reset progress circle
-            progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
+            progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
             updateProgress(100);
             
