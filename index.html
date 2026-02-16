@@ -110,13 +110,18 @@
 
         .ios-button:active, .ios-button.is-pressed { transform: scale(0.92); opacity: 0.8; }
 
-        /* Pressed states for specific buttons */
+        /* --- Standardized Pressed States --- */
         #btn-start.is-pressed, #btn-pause.is-pressed { background-color: #d1d5db; }
         #btn-reset.is-pressed, #btn-skip.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
         #btn-mute.is-pressed { background-color: rgba(255, 255, 255, 0.15); }
-        .spinner-btn.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
         .add-exercise-btn.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
-        .delete-btn.is-pressed { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+        
+        /* For Routine & Export/Import buttons */
+        .ios-button.bg-emerald-500\/10.is-pressed { background-color: rgba(16, 185, 129, 0.25) !important; }
+        .ios-button.bg-blue-500\/10.is-pressed { background-color: rgba(59, 130, 246, 0.25) !important; }
+        .ios-button.bg-gray-500\/10.is-pressed { background-color: rgba(107, 114, 128, 0.25) !important; }
+        .ios-button.bg-red-500\/10.is-pressed { background-color: rgba(239, 68, 68, 0.25) !important; }
+        .ios-button.bg-white\/5.is-pressed { background-color: rgba(255, 255, 255, 0.15) !important; }
 
         @keyframes pulseBig {
             0%, 100% { 
@@ -238,11 +243,7 @@
         
         .delete-btn {
             transition: all 0.2s;
-        }
-        .delete-btn:active {
-            transform: scale(0.9);
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #f87171;
+            /* Note: .is-pressed state is now handled by the generic .ios-button.bg-white/5 rule */
         }
 
         #routine-select option {
@@ -260,27 +261,24 @@
     <div class="max-w-md w-full h-full flex flex-col relative overflow-hidden">
         
         <header class="flex justify-between items-center px-4 md:px-8 pt-10 mb-3 flex-shrink-0">
-            <div class="flex flex-col gap-1 min-w-[140px]">
-                <span class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Interval Timer</span>
-            </div>
-            <button id="btn-mute" onclick="toggleMute()" class="ios-button flex items-center justify-center p-3 h-10 w-10 rounded-2xl apple-glass border-white/5 shadow-xl">
-                <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onclick="switchTab('settings')" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl text-white/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+            <button id="btn-mute" onclick="toggleMute()" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl">
+                <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
-                <svg id="icon-muted" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="icon-muted" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
             </button>
         </header>
 
-        <nav class="nav-container">
-            <button onclick="switchTab('timer')" id="tab-timer" class="tab-btn tab-active">Timer</button>
-            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn">Settings</button>
-            <div id="nav-indicator" class="tab-indicator"></div>
-        </nav>
-
         <div class="view-stack">
-            <div id="view-timer" class="tab-view active pb-8 flex flex-col gap-6 pt-8 justify-center">
+            <div id="view-timer" class="tab-view active pb-8 flex flex-col gap-6 justify-center h-full">
                 <div class="relative w-full flex items-center justify-center px-4">
                     <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
@@ -327,7 +325,11 @@
             </div>
 
             <div id="view-settings" class="tab-view px-4 md:px-8 pb-10">
-                <div class="space-y-4 pt-4">
+                <div class="flex justify-between items-center pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Settings</h2>
+                    <button onclick="switchTab('timer')" class="ios-button bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-blue-900/20">Done</button>
+                </div>
+                <div class="space-y-4">
                     <!-- Routines - TOP -->
                     <div class="apple-glass rounded-[24px] p-5 space-y-3 relative z-20">
                         <label class="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 block">Saved Routines</label>
@@ -343,10 +345,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-2 gap-2">
                             <button id="btn-update-routine" onclick="updateRoutine()" class="ios-button bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-emerald-400 transition-all opacity-50 pointer-events-none">Update</button>
                             <button onclick="saveRoutine()" class="ios-button bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-blue-400 transition-colors">Save New</button>
+                            <button id="btn-rename-routine" onclick="renameRoutine()" class="ios-button bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-gray-400 transition-all opacity-50 pointer-events-none">Rename</button>
                             <button onclick="deleteRoutine()" class="ios-button bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-red-400 transition-colors">Delete</button>
+                        </div>
+                        <div class="flex gap-2 mt-2 pt-2 border-t border-white/5">
+                            <input type="file" id="import-file" accept=".json" class="hidden" onchange="handleFileImport(this)">
+                            <button onclick="exportRoutines()" class="flex-1 ios-button bg-white/5 hover:bg-white/10 rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider text-white/40 transition-colors">Export JSON</button>
+                            <button onclick="document.getElementById('import-file').click()" class="flex-1 ios-button bg-white/5 hover:bg-white/10 rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider text-white/40 transition-colors">Import JSON</button>
                         </div>
                     </div>
 
@@ -369,11 +377,11 @@
                                         class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums">
                                 </span>
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startDecrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startDecrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startIncrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startIncrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -396,11 +404,11 @@
                                     onblur="handleTimeBlur('input-prepare')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -420,11 +428,11 @@
                                     onblur="handleTimeBlur('input-work')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -444,11 +452,11 @@
                                     onblur="handleTimeBlur('input-rest')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -468,11 +476,11 @@
                                     onblur="handleTimeBlur('input-cooldown')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="w-10 h-full flex items-center justify-center text-white/60 active:bg-white/10 active:text-white transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -705,6 +713,18 @@
             }
         }
 
+        const beepPatterns = new Map([
+            [/^\d+$/, { freq: 1200, dur: 80 }], // Countdown
+            [/Rest/, { freq: 400, dur: 150 }], // Rest
+            [/Begin|Start/, { action: () => { playBeep(800, 150); setTimeout(() => playBeep(800, 150), 200); } }], // Start
+            [/complete|amazing/i, { action: () => { // Complete
+                playBeep(700, 120);
+                setTimeout(() => playBeep(900, 120), 150);
+                setTimeout(() => playBeep(1100, 180), 300);
+            }}]
+        ]);
+
+
         // ============================================
         // ROUTINE MANAGER
         // ============================================
@@ -842,6 +862,91 @@
             currentRoutineIndex = -1;
             document.getElementById('ac-ls-dropdown-title').textContent = "Select Routine";
             updateRoutineSelect();
+            saveSettings();
+        }
+
+        async function renameRoutine() {
+            if (currentRoutineIndex === -1) {
+                await showModal({
+                    title: 'No Routine Selected',
+                    message: 'Please select a routine to rename.',
+                    confirmText: 'OK',
+                    cancelText: null,
+                    confirmColor: 'bg-white/10'
+                });
+                return;
+            }
+
+            const routine = savedRoutines[currentRoutineIndex];
+            const newName = await showModal({
+                title: 'Rename Routine',
+                showInput: true,
+                inputValue: routine.name,
+                inputPlaceholder: 'New Routine Name',
+                confirmText: 'Rename'
+            });
+
+            if (!newName || newName.trim() === '' || newName.trim() === routine.name) return;
+
+            savedRoutines[currentRoutineIndex].name = newName.trim();
+            localStorage.setItem('intervalTimerRoutines', JSON.stringify(savedRoutines));
+            document.getElementById('ac-ls-dropdown-title').textContent = newName.trim();
+            updateRoutineSelect();
+        }
+
+        function exportRoutines() {
+            if (savedRoutines.length === 0) {
+                showModal({
+                    title: 'No Routines',
+                    message: 'You have no saved routines to export.',
+                    confirmText: 'OK',
+                    cancelText: null
+                });
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedRoutines, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "interval_timer_routines.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function handleFileImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        const confirmed = await showModal({
+                            title: 'Import Routines',
+                            message: `Found ${imported.length} routines. Import and append to your current list?`,
+                            confirmText: 'Import',
+                            confirmColor: 'bg-blue-500'
+                        });
+
+                        if (confirmed) {
+                            savedRoutines = [...savedRoutines, ...imported];
+                            localStorage.setItem('intervalTimerRoutines', JSON.stringify(savedRoutines));
+                            updateRoutineSelect();
+                            await showModal({
+                                title: 'Success',
+                                message: 'Routines imported successfully!',
+                                confirmText: 'OK',
+                                cancelText: null
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+                input.value = ''; // Reset input
+            };
+            reader.readAsText(file);
         }
 
         function loadRoutine(index) {
@@ -881,11 +986,14 @@
 
         function updateRoutineButtonsState() {
             const updateBtn = document.getElementById('btn-update-routine');
-            if (currentRoutineIndex !== -1) {
-                updateBtn.classList.remove('opacity-50', 'pointer-events-none');
-            } else {
-                updateBtn.classList.add('opacity-50', 'pointer-events-none');
-            }
+            const renameBtn = document.getElementById('btn-rename-routine');
+            const shouldBeEnabled = currentRoutineIndex !== -1;
+
+            [updateBtn, renameBtn].forEach(btn => {
+                if (!btn) return;
+                btn.classList.toggle('opacity-50', !shouldBeEnabled);
+                btn.classList.toggle('pointer-events-none', !shouldBeEnabled);
+            });
         }
 
         function toggleDropdown(show) {
@@ -995,7 +1103,8 @@
                 prepTime: getSecondsFromTimeInput('input-prepare'),
                 coolDownTime: getSecondsFromTimeInput('input-cooldown'),
                 voiceEnabled: voiceEnabled,
-                audioType: audioType
+                audioType: audioType,
+                routineIndex: currentRoutineIndex
             };
             localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
         }
@@ -1038,6 +1147,18 @@
                     
                     // Load audio type
                     audioType = settings.audioType || 'voice';
+                    
+                    // Load selected routine index
+                    if (settings.routineIndex !== undefined) {
+                        if (settings.routineIndex !== -1 && savedRoutines[settings.routineIndex]) {
+                            currentRoutineIndex = settings.routineIndex;
+                            document.getElementById('ac-ls-dropdown-title').textContent = savedRoutines[currentRoutineIndex].name;
+                        } else {
+                            currentRoutineIndex = -1;
+                        }
+                        updateRoutineButtonsState();
+                    }
+
                     updateAudioTypeUI();
                     renderExerciseList();
                 } catch (e) {
@@ -1116,7 +1237,7 @@
                     
                     <input type="text" value="${formattedDuration}" placeholder="--:--" onclick="this.select()" class="exercise-duration-input w-16 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-bold mx-3">
 
-                    <button onclick="removeExerciseRow(this)" class="delete-btn w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
+                    <button onclick="removeExerciseRow(this)" class="delete-btn ios-button w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -1617,22 +1738,14 @@
         function switchTab(tab) {
             const timerView = document.getElementById('view-timer');
             const settingsView = document.getElementById('view-settings');
-            const tabTimerBtn = document.getElementById('tab-timer');
-            const tabSettingsBtn = document.getElementById('tab-settings');
 
             if (tab === 'timer') {
                 settingsView.classList.remove('active');
                 timerView.classList.add('active');
-                tabTimerBtn.classList.add('tab-active');
-                tabSettingsBtn.classList.remove('tab-active');
-                navIndicator.style.transform = 'translateX(0%)';
                 updateTotalTimeDisplay();
             } else {
                 timerView.classList.remove('active');
                 settingsView.classList.add('active');
-                tabSettingsBtn.classList.add('tab-active');
-                tabTimerBtn.classList.remove('tab-active');
-                navIndicator.style.transform = 'translateX(100%)';
                 if (timer && !isPaused) togglePause();
             }
         }
@@ -1658,39 +1771,22 @@
         
         function speak(text) {
             if (!voiceEnabled) return;
-            
-            console.log('speak() called with:', text, 'audioType:', audioType); // Debug
-            
+
             if (audioType === 'beep') {
-                // Different beep patterns for different announcements
-                if (text.match(/^\d+$/)) {
-                    // Countdown numbers: short high beep
-                    console.log('Countdown beep');
-                    playBeep(1200, 80);
-                } else if (text.includes('Rest')) {
-                    // Rest period: low beep
-                    console.log('Rest beep');
-                    playBeep(400, 150);
-                } else if (text.includes('Begin') || text.includes('Start')) {
-                    // Exercise start: double beep
-                    console.log('Begin beep');
-                    playBeep(800, 150);
-                    setTimeout(() => playBeep(800, 150), 200);
-                } else if (text.toLowerCase().includes('complete') || text.toLowerCase().includes('amazing')) {
-                    // Workout complete: FAST energetic victory beeps! 🎉
-                    console.log('VICTORY BEEPS! Text was:', text);
-                    playBeep(700, 120);  // Quick ascending melody
-                    setTimeout(() => {
-                        console.log('Second beep playing');
-                        playBeep(900, 120);
-                    }, 150);
-                    setTimeout(() => {
-                        console.log('Third beep playing');
-                        playBeep(1100, 180); // Longer final note
-                    }, 300);
-                } else {
-                    // Default: single beep
-                    console.log('Default beep for:', text);
+                let patternFound = false;
+                for (const [regex, config] of beepPatterns.entries()) {
+                    if (regex.test(text)) {
+                        if (config.action) {
+                            config.action();
+                        } else {
+                            playBeep(config.freq, config.dur);
+                        }
+                        patternFound = true;
+                        break;
+                    }
+                }
+                if (!patternFound) {
+                    // Default beep for unhandled cases
                     playBeep(800, 120);
                 }
             } else {
@@ -1802,17 +1898,25 @@
             }; 
         }
 
+        const phaseStyles = {
+            prepare: { circle: 'text-blue-500', text: 'text-blue-400' },
+            work:    { circle: 'text-emerald-500', text: 'text-emerald-400' },
+            rest:    { circle: 'text-orange-500', text: 'text-orange-400' },
+            cooldown:{ circle: 'text-teal-500', text: 'text-teal-400' },
+        };
+        const allCircleClasses = Object.values(phaseStyles).map(s => s.circle);
+        const allTextClasses = Object.values(phaseStyles).map(s => s.text);
+
         function setVisualState(phase) {
-            const colors = { prepare: 'text-blue-500', work: 'text-emerald-500', rest: 'text-orange-500', cooldown: 'text-teal-500' };
-            const textColors = { prepare: 'text-blue-400', work: 'text-emerald-400', rest: 'text-orange-400', cooldown: 'text-teal-400' };
-            
-            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-300', 'text-yellow-400');
-            progressCircle.classList.add(colors[phase]);
-            
-            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-teal-400', 'text-yellow-300', 'text-yellow-400');
-            exerciseTextEl.classList.add(textColors[phase]);
-            
-            
+            const style = phaseStyles[phase];
+            if (style) {
+                progressCircle.classList.remove(...allCircleClasses, 'text-yellow-300', 'text-yellow-400');
+                progressCircle.classList.add(style.circle);
+                
+                exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400');
+                exerciseTextEl.classList.add(style.text);
+            }
+
             if (phase === 'prepare') {
                 exerciseTextEl.innerText = "Get Ready";
                 const info = getIntervalData(0);
@@ -2148,8 +2252,8 @@
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
-            loadSettings();
             loadRoutines();
+            loadSettings();
             renderExerciseList();
             setupAutoSave();
             timeLeftEl.innerText = formatTime(0);
