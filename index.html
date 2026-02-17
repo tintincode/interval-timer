@@ -319,7 +319,7 @@
                             Pause
                         </button>
                     </div>
-                    <button id="btn-skip" onclick="nextPhase()" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
+                    <button id="btn-skip" onclick="nextPhase(true)" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
                         Skip
                     </button>
                 </div>
@@ -530,6 +530,11 @@
             </div>
         </div>
 
+        <!-- Total Progress Bar -->
+        <div class="absolute bottom-0 left-0 w-full h-3 bg-white/10 z-30">
+            <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+        </div>
+
         <div id="message-box" class="fixed top-8 left-1/2 -translate-x-1/2 px-8 py-3 rounded-full apple-glass text-white font-black text-[10px] shadow-2xl transition-all opacity-0 pointer-events-none z-50 uppercase tracking-widest">Workout Complete</div>
     
         <!-- Custom Modal -->
@@ -655,13 +660,14 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, exerciseObjects = [], phaseEndTime = 0, pausedTimeRemainingMs = 0;
+        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, initialTotalTime = 0, exerciseObjects = [], phaseEndTime = 0, pausedTimeRemainingMs = 0, workoutEndTime = 0, pauseStartTime = 0;
 
         const timeLeftEl = document.getElementById('time-left');
         const roundDisplayEl = document.getElementById('round-display');
         const circuitDisplayEl = document.getElementById('circuit-display');
         const totalTimeDisplayEl = document.getElementById('total-time-display');
         const exerciseTextEl = document.getElementById('current-exercise');
+        const totalProgressBar = document.getElementById('total-progress-bar');
         const progressCircle = document.getElementById('progress-circle');
         const navIndicator = document.getElementById('nav-indicator');
         const btnMute = document.getElementById('btn-mute');
@@ -1816,6 +1822,20 @@
             return totalTime;
         }
         
+        function updateProgressBar(time, isRunning) {
+            if (!totalProgressBar) return;
+
+            let progress;
+            if (isRunning) {
+                // Smoothly update based on precise time remaining
+                progress = (initialTotalTime > 0) ? (time / initialTotalTime) * 100 : 0;
+            } else {
+                // Set static state: 100% if a workout is configured, 0% otherwise
+                progress = (time > 0) ? 100 : 0;
+            }
+            totalProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+        }
+
         function updateTotalTimeDisplay(secondsOverride = null) {
             // If a specific time is provided (during workout), use it. 
             // Otherwise calculate from settings (during setup).
@@ -1831,6 +1851,10 @@
             } else {
                 totalTimeDisplayEl.classList.remove('opacity-0');
             }
+
+            // Update Total Progress Bar only when timer is NOT running.
+            // When timer is running, it's handled by updateProgressBarOnly on each frame.
+            if (!timer && !isPaused) { updateProgressBar(totalSeconds, false); }
         }
         
         function updateCountsDisplay() {
@@ -1872,15 +1896,19 @@
         }
 
         const phaseStyles = {
-            prepare: { circle: 'text-blue-500', text: 'text-blue-400' },
-            work:    { circle: 'text-emerald-500', text: 'text-emerald-400' },
-            rest:    { circle: 'text-orange-500', text: 'text-orange-400' },
-            cooldown:{ circle: 'text-teal-500', text: 'text-teal-400' },
+            prepare: { circle: 'text-blue-500', text: 'text-blue-400', bar: 'bg-blue-500', shadow: 'shadow-[0_0_10px_rgba(59,130,246,0.5)]' },
+            work:    { circle: 'text-emerald-500', text: 'text-emerald-400', bar: 'bg-emerald-500', shadow: 'shadow-[0_0_10px_rgba(16,185,129,0.5)]' },
+            rest:    { circle: 'text-orange-500', text: 'text-orange-400', bar: 'bg-orange-500', shadow: 'shadow-[0_0_10px_rgba(245,158,11,0.5)]' },
+            cooldown:{ circle: 'text-teal-500', text: 'text-teal-400', bar: 'bg-teal-500', shadow: 'shadow-[0_0_10px_rgba(20,184,166,0.5)]' },
         };
         const allCircleClasses = Object.values(phaseStyles).map(s => s.circle);
         const allTextClasses = Object.values(phaseStyles).map(s => s.text);
+        const allBarClasses = Object.values(phaseStyles).map(s => s.bar);
+        const allShadowClasses = Object.values(phaseStyles).map(s => s.shadow);
 
-        function setVisualState(phase) {
+        function setVisualState(phase, instant = false) {
+            if (instant) { progressCircle.style.transition = 'none'; }
+
             const style = phaseStyles[phase];
             if (style) {
                 progressCircle.classList.remove(...allCircleClasses, 'text-yellow-300', 'text-yellow-400');
@@ -1888,6 +1916,9 @@
                 
                 exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400');
                 exerciseTextEl.classList.add(style.text);
+
+                totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses, 'bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
+                totalProgressBar.classList.add(style.bar, style.shadow);
             }
 
             if (phase === 'prepare') {
@@ -1925,6 +1956,8 @@
                 speak(info.exercise.name + ". Begin.");
                 //speak(info.exercise.name + ". Start.");
             }
+
+            if (instant) { progressCircle.style.transition = ''; }
         }
 
         function runTimerLoop() {
@@ -1945,31 +1978,40 @@
             const percent = (timeLeftMs / (totalPhaseSeconds * 1000)) * 100;
             updateProgress(percent);
 
-            // Integer second updates
+            // Integer second updates for text display
             const currentSeconds = Math.ceil(timeLeftMs / 1000);
             if (currentSeconds !== secondsRemaining) {
                 secondsRemaining = currentSeconds;
                 timeLeftEl.innerText = formatTime(secondsRemaining);
                 
                 if (totalTimeRemaining > 0) totalTimeRemaining--;
-                updateTotalTimeDisplay(totalTimeRemaining);
+                updateTotalTimeDisplay(totalTimeRemaining); // Update text and non-timer bar state
                 
                 if (secondsRemaining <= 3 && secondsRemaining > 0) {
                     speak(secondsRemaining.toString());
                 }
             }
+            const preciseTotalTime = workoutEndTime > 0 ? (workoutEndTime - Date.now()) / 1000 : 0;
+            updateProgressBar(preciseTotalTime, true);
         }
 
-        function nextPhase() {
+        function nextPhase(isManualSkip = false) {
             if (!timer) return;
             // If manually skipping, cancel current loop frame to prevent double-fire
             if (timer) cancelAnimationFrame(timer);
             
+            // If this is a natural transition (not a manual skip), the last second just ended.
+            // We need to decrement the total time to account for it before starting the next phase.
+            if (!isManualSkip && totalTimeRemaining > 0) {
+                totalTimeRemaining--;
+            }
+
             // If skipping manually (time left on clock), deduct it from total remaining
-            if (secondsRemaining > 0) {
+            if (isManualSkip && secondsRemaining > 0) {
+                workoutEndTime -= secondsRemaining * 1000;
                 totalTimeRemaining -= secondsRemaining;
                 if (totalTimeRemaining < 0) totalTimeRemaining = 0;
-                updateTotalTimeDisplay(totalTimeRemaining);
+                updateTotalTimeDisplay(totalTimeRemaining); // Instant update for skip
             }
             
             if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
@@ -1988,7 +2030,7 @@
             else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; } // Rest -> Work
             secondsRemaining = totalPhaseSeconds;
             
-            setVisualState(currentPhase);
+            setVisualState(currentPhase, isManualSkip);
             timeLeftEl.innerText = formatTime(secondsRemaining);
             refillProgress();
             
@@ -2026,6 +2068,8 @@
             secondsRemaining = totalPhaseSeconds;
             phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
             totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
+            initialTotalTime = totalTimeRemaining; // Store initial total for progress bar
+            workoutEndTime = Date.now() + (initialTotalTime * 1000);
             
             timeLeftEl.innerText = formatTime(secondsRemaining); 
             updateProgress(100); // Set initial progress to full
@@ -2048,6 +2092,7 @@
                 cancelAnimationFrame(timer);
                 // Calculate exact remaining time to preserve precision
                 pausedTimeRemainingMs = phaseEndTime - Date.now();
+                pauseStartTime = Date.now();
                 
                 await wakeLockManager.disable();
                 speechManager.cancel();
@@ -2055,6 +2100,11 @@
             } else {
                 // Resume using exact stored time
                 phaseEndTime = Date.now() + pausedTimeRemainingMs;
+                if (pauseStartTime > 0) {
+                    const pauseDuration = Date.now() - pauseStartTime;
+                    workoutEndTime += pauseDuration;
+                    pauseStartTime = 0;
+                }
                 await wakeLockManager.enable();
                 runTimerLoop();
             }
@@ -2100,6 +2150,10 @@
             // Make progress circle soft yellow for completion
             progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400');
             progressCircle.classList.add('text-yellow-300');
+
+            // Make total progress bar yellow
+            totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses);
+            totalProgressBar.classList.add('bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
             btnStart.innerText = "Start";
@@ -2130,6 +2184,9 @@
             globalIntervalIndex = 0;
             secondsRemaining = 0;
             totalPhaseSeconds = 0;
+            initialTotalTime = 0;
+            workoutEndTime = 0;
+            pauseStartTime = 0;
             exerciseObjects = [];
             
             // Reset UI - Status and Exercise
@@ -2141,7 +2198,7 @@
             updateCountsDisplay();
             
             // Reset total time display
-            updateTotalTimeDisplay();
+            updateTotalTimeDisplay(); // Instant update for reset
             
             // Reset buttons
             btnStart.innerText = "Start";
@@ -2152,6 +2209,10 @@
             progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
             updateProgress(100);
+
+            // Reset total progress bar
+            totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses, 'bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
+            totalProgressBar.classList.add('bg-blue-500', 'shadow-[0_0_10px_rgba(59,130,246,0.5)]');
             
             // Remove celebration glow
             const completionGlow = document.getElementById('completion-glow');
@@ -2197,7 +2258,7 @@
                     toggleMute();
                     break;
                 case 'ArrowRight':
-                    if (timer && !isPaused) nextPhase();
+                    if (timer && !isPaused) nextPhase(true);
                     break;
             }
         });
