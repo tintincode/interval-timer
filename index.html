@@ -209,6 +209,7 @@
         #current-exercise {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -377,11 +378,11 @@
                                         class="w-12 bg-transparent text-xl font-black text-center outline-none tabular-nums">
                                 </span>
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startDecrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startDecrement('input-rounds')" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startIncrement('input-rounds'); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startIncrement('input-rounds')" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -404,11 +405,11 @@
                                     onblur="handleTimeBlur('input-prepare')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-prepare', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-prepare', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-prepare', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -428,11 +429,11 @@
                                     onblur="handleTimeBlur('input-work')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-work', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-work', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-work', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -452,11 +453,11 @@
                                     onblur="handleTimeBlur('input-rest')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-rest', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-rest', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-rest', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -476,11 +477,11 @@
                                     onblur="handleTimeBlur('input-cooldown')"
                                     class="w-16 bg-transparent text-xl font-black text-right outline-none tabular-nums">
                                 <div class="flex items-center bg-white/5 rounded-xl border border-white/10 h-10">
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-l-xl" ontouchstart="startTimeDecrement('input-cooldown', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                     </button>
                                     <div class="w-px h-4 bg-white/10"></div>
-                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-cooldown', event); event.preventDefault();" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                    <button class="ios-button w-10 h-full flex items-center justify-center text-white/60 transition-colors rounded-r-xl" ontouchstart="startTimeIncrement('input-cooldown', event)" ontouchend="stopAdjustment()" onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
@@ -1593,10 +1594,15 @@
         let adjustmentTimeout = null;
         let speedUpTimeout = null;
         let isAdjusting = false; // Prevent double-fire on mobile
+        
+        // New state variables for scroll vs. tap detection
+        let tapTimeout = null;
+        let isScrolling = false;
+        let touchStartY = 0;
 
-        function incrementTimeValue(inputId) {
+        function incrementTimeValue(inputId) { // +5 seconds
             const seconds = getSecondsFromTimeInput(inputId);
-            setTimeInputSeconds(inputId, seconds + 5); // +5 seconds
+            setTimeInputSeconds(inputId, seconds + 5);
             
             // Haptic feedback on mobile
             if (navigator.vibrate) {
@@ -1604,66 +1610,59 @@
             }
         }
 
-        function decrementTimeValue(inputId) {
+        function decrementTimeValue(inputId) { // -5 seconds
             const seconds = getSecondsFromTimeInput(inputId);
-            setTimeInputSeconds(inputId, seconds - 5); // -5 seconds
+            setTimeInputSeconds(inputId, seconds - 5);
             
             // Haptic feedback on mobile
             if (navigator.vibrate) {
                 navigator.vibrate(10);
             }
+        }
+
+        function startAdjustment(actionFn) {
+            // Don't start a new adjustment if one is in progress or if we are scrolling
+            if (isAdjusting || isScrolling) return;
+            isAdjusting = true;
+
+            const performActionAndHold = () => {
+                actionFn(); // Perform the first action
+
+                // Set up the long-press timer to repeat the action
+                adjustmentTimeout = setTimeout(() => {
+                    adjustmentInterval = setInterval(actionFn, 150); // Repeat every 150ms
+                    
+                    // Speed up after 2 seconds
+                    speedUpTimeout = setTimeout(() => {
+                        clearInterval(adjustmentInterval);
+                        adjustmentInterval = setInterval(actionFn, 75); // Repeat faster
+                    }, 2000);
+                }, 420); // Wait 420ms after the first action to start repeating (total ~500ms)
+            };
+
+            // Set a short timeout. If it's not cleared by a scroll, we consider it a tap/hold.
+            tapTimeout = setTimeout(performActionAndHold, 80);
         }
 
         function startTimeIncrement(inputId, event) {
-            if (isAdjusting) return;
-            if (event) event.preventDefault();
-            isAdjusting = true;
-            
-            incrementTimeValue(inputId);
-            
-            adjustmentTimeout = setTimeout(() => {
-                adjustmentInterval = setInterval(() => {
-                    incrementTimeValue(inputId);
-                }, 150);
-                
-                speedUpTimeout = setTimeout(() => {
-                    clearInterval(adjustmentInterval);
-                    adjustmentInterval = setInterval(() => {
-                        incrementTimeValue(inputId);
-                    }, 75);
-                }, 2000);
-            }, 500);
+            startAdjustment(() => incrementTimeValue(inputId));
         }
 
         function startTimeDecrement(inputId, event) {
-            if (isAdjusting) return;
-            if (event) event.preventDefault();
-            isAdjusting = true;
-            
-            decrementTimeValue(inputId);
-            
-            adjustmentTimeout = setTimeout(() => {
-                adjustmentInterval = setInterval(() => {
-                    decrementTimeValue(inputId);
-                }, 150);
-                
-                speedUpTimeout = setTimeout(() => {
-                    clearInterval(adjustmentInterval);
-                    adjustmentInterval = setInterval(() => {
-                        decrementTimeValue(inputId);
-                    }, 75);
-                }, 2000);
-            }, 500);
+            startAdjustment(() => decrementTimeValue(inputId));
         }
 
         function stopAdjustment() {
             clearTimeout(adjustmentTimeout);
             clearTimeout(speedUpTimeout);
             clearInterval(adjustmentInterval);
-            adjustmentTimeout = null;
-            speedUpTimeout = null;
-            adjustmentInterval = null;
             isAdjusting = false;
+        }
+
+        function cancelAllAdjustments() {
+            clearTimeout(tapTimeout);
+            tapTimeout = null;
+            stopAdjustment();
         }
 
         // ============================================
@@ -1701,37 +1700,11 @@
         }
 
         function startIncrement(inputId) {
-            incrementValue(inputId);
-            
-            adjustmentTimeout = setTimeout(() => {
-                adjustmentInterval = setInterval(() => {
-                    incrementValue(inputId);
-                }, 150);
-                
-                speedUpTimeout = setTimeout(() => {
-                    clearInterval(adjustmentInterval);
-                    adjustmentInterval = setInterval(() => {
-                        incrementValue(inputId);
-                    }, 75);
-                }, 2000);
-            }, 500);
+            startAdjustment(() => incrementValue(inputId));
         }
 
         function startDecrement(inputId) {
-            decrementValue(inputId);
-            
-            adjustmentTimeout = setTimeout(() => {
-                adjustmentInterval = setInterval(() => {
-                    decrementValue(inputId);
-                }, 150);
-                
-                speedUpTimeout = setTimeout(() => {
-                    clearInterval(adjustmentInterval);
-                    adjustmentInterval = setInterval(() => {
-                        decrementValue(inputId);
-                    }, 75);
-                }, 2000);
-            }, 500);
+            startAdjustment(() => decrementValue(inputId));
         }
 
 
@@ -2249,6 +2222,24 @@
                 btn.addEventListener(evt, clear);
             });
         });
+
+        // Add listeners to differentiate between a tap and a scroll on touch devices
+        window.addEventListener('touchstart', (e) => {
+            // Reset scroll detection on a new touch
+            isScrolling = false;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            // If the touch has moved more than 10px vertically, it's a scroll
+            if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
+                if (!isScrolling) { // Only trigger once per scroll
+                    isScrolling = true;
+                    // A scroll should cancel any pending button press
+                    cancelAllAdjustments();
+                }
+            }
+        }, { passive: true });
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
