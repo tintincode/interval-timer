@@ -612,7 +612,7 @@
                 if (this.isInitialized) return;
                 
                 if (this.isIOS && 'speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance('');
+                    const utterance = new SpeechSynthesisUtterance(' ');
                     utterance.volume = 0;
                     window.speechSynthesis.speak(utterance);
                     this.isInitialized = true;
@@ -669,15 +669,17 @@
 
             async unlock() {
                 this.init();
-                if (this.context.state === 'suspended') {
-                    await this.context.resume();
-                }
+                
                 // Play a silent buffer to ensure audio engine is really ready on iOS
                 const buffer = this.context.createBuffer(1, 1, 22050);
                 const source = this.context.createBufferSource();
                 source.buffer = buffer;
                 source.connect(this.context.destination);
                 source.start(0);
+
+                if (this.context.state === 'suspended') {
+                    await this.context.resume();
+                }
             }
 
             playTone(freq, duration, type = 'sine', startTime = 0) {
@@ -2277,9 +2279,9 @@
         }
 
         btnStart.addEventListener('click', async () => {
-            // Unlock audio immediately on user interaction
-            await soundManager.unlock();
+            // Initialize speech FIRST (must be synchronous in user gesture for iOS)
             speechManager.initialize();
+            await soundManager.unlock();
 
             if (timer && isPaused) {
                 togglePause();
@@ -2332,8 +2334,8 @@
                     if (timer || isPaused) {
                         togglePause();
                     } else {
+                        speechManager.initialize();
                         soundManager.unlock().then(() => {
-                            speechManager.initialize();
                             startWorkout();
                         });
                     }
