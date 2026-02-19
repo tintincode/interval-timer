@@ -659,100 +659,110 @@
         class SoundManager {
             constructor() {
                 this.ctx = null;
-                // Do NOT use a simple boolean flag. Always check ctx.state directly.
             }
 
-            // Must be called inside a user gesture (button click).
-            // Safe to call multiple times — always ensures ctx is running.
+            // Must be called inside a user gesture (button click) every time Start is pressed.
+            // Creates the AudioContext on first call; resumes it on every subsequent call
+            // so it is never silently suspended (browsers can suspend it after inactivity).
             async unlock() {
                 try {
                     if (!this.ctx) {
                         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                     }
-                    // Always resume, even if we think it's already running.
-                    // Browsers (especially iOS Safari) can re-suspend the context silently.
                     if (this.ctx.state !== 'running') {
                         await this.ctx.resume();
                     }
-                    // Play a zero-length silent buffer — this is required on iOS to
-                    // "activate" the audio hardware within the gesture handler.
+                    // iOS Safari requires a real buffer playback inside the gesture handler
+                    // to fully activate the audio hardware.
                     const buf = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
                     const src = this.ctx.createBufferSource();
                     src.buffer = buf;
                     src.connect(this.ctx.destination);
                     src.start(0);
-                    console.log('✓ Web Audio API ready, state:', this.ctx.state);
+                    console.log('✓ Web Audio ready, state:', this.ctx.state);
                 } catch (e) {
-                    console.error('Audio unlock failed', e);
+                    console.error('Audio unlock failed:', e);
                 }
             }
 
-            /**
-             * Play a tone. Schedules a small lookahead (50ms) so the note is never
-             * clipped, especially on the very first call after unlock.
-             * @param {number} freq     - Frequency in Hz
-             * @param {number} duration - Duration in seconds
-             * @param {number} vol      - Volume 0–1 (default 0.3)
-             * @param {number} offset   - Extra seconds to add on top of (currentTime + 0.05)
-             */
-            playTone(freq, duration, vol = 0.3, offset = 0) {
-                if (!this.ctx) {
-                    console.warn('AudioContext not created yet.');
-                    return;
-                }
-                // If context got suspended (e.g. tab went background), try to resume.
-                // We can't await here, but resume() will queue the node for playback.
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-
-                const ctx = this.ctx;
-                // 50ms lookahead prevents clipping on first play after unlock
-                const when = ctx.currentTime + 0.05 + offset;
-
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-
+            // Internal: schedule a single tone at a precise AudioContext time.
+            // `when` should always be ctx.currentTime + some lookahead (never just currentTime).
+            _tone(freq, duration, vol, when) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
-
+                gain.connect(this.ctx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, when);
-
-                // Short attack, exponential decay
+                osc.frequency.value = freq;
+                // Short attack, exponential decay envelope
                 gain.gain.setValueAtTime(0, when);
                 gain.gain.linearRampToValueAtTime(vol, when + 0.008);
                 gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
-
                 osc.start(when);
                 osc.stop(when + duration + 0.02);
             }
 
-            playCountdown() {
-                this.playTone(1200, 0.1, 0.3);
+            // Public: play a sequence of tones.
+            // `notes` is an array of { freq, duration, vol, delay }
+            // All delays are relative to now + a fixed 80ms lookahead.
+            // 80ms is enough to be reliable on both iOS and PC, but short enough to feel instant.
+            _play(notes) {
+                if (!this.ctx) {
+                    console.warn('AudioContext not ready.');
+                    return;
+                }
+                if (this.ctx.state === 'suspended') {
+                    // Shouldn't normally happen (unlock() is called on every Start press),
+                    // but handle gracefully just in case.
+                    this.ctx.resume().then(() => this._scheduleNotes(notes));
+                } else {
+                    this._scheduleNotes(notes);
+                }
             }
 
-            playWorkStart() {
-                // Double beep — offset second beep by 0.22s from first
-                this.playTone(800, 0.15, 0.35, 0);
-                this.playTone(800, 0.15, 0.35, 0.22);
-            }
-
-            playRestStart() {
-                this.playTone(400, 0.2, 0.3);
+            _scheduleNotes(notes) {
+                // Snapshot currentTime ONCE so all notes in a sequence are relative to
+                // the same reference point, regardless of JS execution time between calls.
+                const base = this.ctx.currentTime + 0.08;
+                notes.forEach(({ freq, duration, vol, delay = 0 }) => {
+                    this._tone(freq, duration, vol, base + delay);
+                });
             }
 
             playPrepare() {
-                // Distinct rising two-tone to signal "get ready"
-                this.playTone(500, 0.12, 0.25, 0);
-                this.playTone(700, 0.15, 0.3, 0.18);
+                // Single rising two-tone: clearly signals "get ready"
+                this._play([
+                    { freq: 500, duration: 0.12, vol: 0.3,  delay: 0    },
+                    { freq: 750, duration: 0.15, vol: 0.35, delay: 0.18 },
+                ]);
+            }
+
+            playCountdown() {
+                // Short high tick
+                this._play([{ freq: 1200, duration: 0.1, vol: 0.3 }]);
+            }
+
+            playWorkStart() {
+                // Double beep — "Go!"
+                this._play([
+                    { freq: 880, duration: 0.15, vol: 0.4, delay: 0    },
+                    { freq: 880, duration: 0.15, vol: 0.4, delay: 0.22 },
+                ]);
+            }
+
+            playRestStart() {
+                // Single low tone — "Rest"
+                this._play([{ freq: 400, duration: 0.25, vol: 0.3 }]);
             }
 
             playComplete() {
-                // Victory sequence
-                this.playTone(700, 0.12, 0.3, 0);
-                this.playTone(900, 0.12, 0.3, 0.17);
-                this.playTone(1100, 0.2,  0.35, 0.34);
+                // Rising victory sequence
+                this._play([
+                    { freq: 700,  duration: 0.12, vol: 0.3,  delay: 0    },
+                    { freq: 900,  duration: 0.12, vol: 0.3,  delay: 0.17 },
+                    { freq: 1100, duration: 0.2,  vol: 0.35, delay: 0.34 },
+                ]);
             }
         }
 
@@ -1813,28 +1823,25 @@
             }
         }
         
+        // speak() is ONLY for voice TTS. Beep sounds are triggered directly
+        // via beep() at each phase transition and countdown tick.
         function speak(text) {
             if (!voiceEnabled) return;
+            if (audioType === 'beep') return;
+            speechManager.speak(text, voiceEnabled);
+        }
 
-            if (audioType === 'beep') {
-                const num = parseInt(text);
-                if (!isNaN(num)) {
-                    soundManager.playCountdown();
-                } else if (/Get ready/i.test(text)) {
-                    // playPrepare() is already called explicitly before speak() for the prepare phase — skip here to avoid double-beep
-                } else if (/Rest/.test(text)) {
-                    soundManager.playRestStart();
-                } else if (/Begin|Start/.test(text)) {
-                    soundManager.playWorkStart();
-                } else if (/complete|amazing/i.test(text)) {
-                    soundManager.playComplete();
-                } else if (/Cool Down/i.test(text)) {
-                    soundManager.playRestStart();
-                }
-                // no fallback — other strings (exercise names, etc.) are voice-only concepts
-            } else {
-                // Use voice
-                speechManager.speak(text, voiceEnabled);
+        // beep() is ONLY for beep mode. Called directly at phase transitions and countdown.
+        function beep(type) {
+            if (!voiceEnabled) return;
+            if (audioType !== 'beep') return;
+            switch (type) {
+                case 'prepare':   soundManager.playPrepare();   break;
+                case 'work':      soundManager.playWorkStart(); break;
+                case 'rest':      soundManager.playRestStart(); break;
+                case 'cooldown':  soundManager.playRestStart(); break;
+                case 'countdown': soundManager.playCountdown(); break;
+                case 'complete':  soundManager.playComplete();  break;
             }
         }
         
@@ -1994,19 +2001,21 @@
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
-                if (voiceEnabled && audioType === 'beep') soundManager.playPrepare();
+                beep('prepare');
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
                 exerciseTextEl.innerText = "Rest";
                 const info = getIntervalData(globalIntervalIndex + 1);
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                beep('rest');
                 speak(`Rest. Next is ${info.exercise.name}.`);
             } else if (phase === 'cooldown') {
                 exerciseTextEl.innerText = "Cool Down";
                 roundDisplayEl.innerText = "Cool Down";
                 nextExerciseNameEl.innerText = "Complete";
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                beep('cooldown');
                 speak("Cool Down");
             } else {
                 const info = getIntervalData(globalIntervalIndex);
@@ -2020,8 +2029,8 @@
                 } else {
                     nextUpContainer.classList.replace('opacity-100', 'opacity-0');
                 }
+                beep('work');
                 speak(info.exercise.name + ". Begin.");
-                //speak(info.exercise.name + ". Start.");
             }
 
             if (instant) { progressCircle.style.transition = ''; }
@@ -2055,6 +2064,7 @@
                 updateTotalTimeDisplay(totalTimeRemaining); // Update text and non-timer bar state
                 
                 if (secondsRemaining <= 3 && secondsRemaining > 0) {
+                    beep('countdown');
                     speak(secondsRemaining.toString());
                 }
             }
@@ -2246,6 +2256,7 @@
             btnStart.innerText = "Start";
             btnStart.classList.remove('hidden'); 
             btnPause.classList.add('hidden'); 
+            beep('complete');
             speak("Workout complete! Great job!"); 
         }
 
