@@ -654,6 +654,79 @@
         const speechManager = new SpeechManager();
 
         // ============================================
+        // SOUND MANAGER (Beeps)
+        // ============================================
+        class SoundManager {
+            constructor() {
+                this.context = null;
+            }
+
+            init() {
+                if (!this.context) {
+                    this.context = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            async unlock() {
+                this.init();
+                if (this.context.state === 'suspended') {
+                    await this.context.resume();
+                }
+                // Play a silent buffer to ensure audio engine is really ready on iOS
+                const buffer = this.context.createBuffer(1, 1, 22050);
+                const source = this.context.createBufferSource();
+                source.buffer = buffer;
+                source.connect(this.context.destination);
+                source.start(0);
+            }
+
+            playTone(freq, duration, type = 'sine', startTime = 0) {
+                if (!this.context) return;
+                
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                
+                osc.type = type;
+                osc.frequency.value = freq;
+                
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                
+                const now = this.context.currentTime + startTime;
+                
+                // "Solid" beep envelope (immediate attack)
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                
+                osc.start(now);
+                osc.stop(now + duration);
+            }
+
+            playCountdown() {
+                this.playTone(1200, 0.1, 'sine');
+            }
+
+            playWorkStart() {
+                // Classic double beep
+                this.playTone(800, 0.15, 'sine', 0);
+                this.playTone(800, 0.15, 'sine', 0.2);
+            }
+
+            playRestStart() {
+                this.playTone(400, 0.15, 'sine');
+            }
+
+            playComplete() {
+                // Classic victory sequence
+                this.playTone(700, 0.12, 'sine', 0);
+                this.playTone(900, 0.12, 'sine', 0.15);
+                this.playTone(1100, 0.18, 'sine', 0.3);
+            }
+        }
+
+        const soundManager = new SoundManager();
+
+        // ============================================
         // TIMER CODE
         // ============================================
         const CIRCLE_RADIUS = 148;
@@ -692,45 +765,6 @@
         let voiceEnabled = true;
         let audioType = 'voice'; // 'voice' or 'beep'
         
-        // Beep sound generator
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playBeep(frequency = 800, duration = 100) {
-            if (!voiceEnabled) return;
-            
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = frequency;
-                oscillator.type = 'sine';
-                
-                const now = audioContext.currentTime;
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration / 1000);
-                
-                oscillator.start(now);
-                oscillator.stop(now + duration / 1000);
-            } catch (e) {
-                console.error('Beep error:', e);
-            }
-        }
-
-        const beepPatterns = new Map([
-            [/^\d+$/, { freq: 1200, dur: 80 }], // Countdown
-            [/Rest/, { freq: 400, dur: 150 }], // Rest
-            [/Begin|Start/, { action: () => { playBeep(800, 150); setTimeout(() => playBeep(800, 150), 200); } }], // Start
-            [/complete|amazing/i, { action: () => { // Complete
-                playBeep(700, 120);
-                setTimeout(() => playBeep(900, 120), 150);
-                setTimeout(() => playBeep(1100, 180), 300);
-            }}]
-        ]);
-
-
         // ============================================
         // ROUTINE MANAGER
         // ============================================
@@ -1751,21 +1785,18 @@
             if (!voiceEnabled) return;
 
             if (audioType === 'beep') {
-                let patternFound = false;
-                for (const [regex, config] of beepPatterns.entries()) {
-                    if (regex.test(text)) {
-                        if (config.action) {
-                            config.action();
-                        } else {
-                            playBeep(config.freq, config.dur);
-                        }
-                        patternFound = true;
-                        break;
-                    }
-                }
-                if (!patternFound) {
-                    // Default beep for unhandled cases
-                    playBeep(800, 120);
+                const num = parseInt(text);
+                if (!isNaN(num)) {
+                    soundManager.playCountdown();
+                } else if (/Rest/.test(text)) {
+                    soundManager.playRestStart();
+                } else if (/Begin|Start/.test(text)) {
+                    soundManager.playWorkStart();
+                } else if (/complete|amazing/i.test(text)) {
+                    soundManager.playComplete();
+                } else {
+                    // Default fallback
+                    soundManager.playRestStart();
                 }
             } else {
                 // Use voice
@@ -2245,11 +2276,9 @@
             console.log('✓ Reset complete');
         }
 
-        btnStart.addEventListener('click', () => {
-            // Initialize audio subsystems immediately on user interaction
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+        btnStart.addEventListener('click', async () => {
+            // Unlock audio immediately on user interaction
+            await soundManager.unlock();
             speechManager.initialize();
 
             if (timer && isPaused) {
@@ -2300,8 +2329,14 @@
             switch(e.code) {
                 case 'Space':
                     e.preventDefault(); // Prevent scrolling
-                    if (timer || isPaused) togglePause();
-                    else startWorkout();
+                    if (timer || isPaused) {
+                        togglePause();
+                    } else {
+                        soundManager.unlock().then(() => {
+                            speechManager.initialize();
+                            startWorkout();
+                        });
+                    }
                     break;
                 case 'KeyR':
                     resetTimer();
