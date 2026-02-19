@@ -677,14 +677,23 @@
                 source.connect(this.context.destination);
                 source.start(0);
 
-                if (this.context.state === 'suspended') {
-                    await this.context.resume();
+                if (this.context.state === 'suspended' || this.context.state === 'interrupted') {
+                    try {
+                        await this.context.resume();
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }
             }
 
             playTone(freq, duration, type = 'sine', startTime = 0) {
                 if (!this.context) return;
                 
+                // Ensure context is running
+                if (this.context.state === 'suspended' || this.context.state === 'interrupted') {
+                    this.context.resume();
+                }
+
                 const osc = this.context.createOscillator();
                 const gain = this.context.createGain();
                 
@@ -694,7 +703,8 @@
                 osc.connect(gain);
                 gain.connect(this.context.destination);
                 
-                const now = this.context.currentTime + startTime;
+                // Add small safety buffer to ensure start time is valid
+                const now = this.context.currentTime + startTime + 0.005;
                 
                 // "Solid" beep envelope (immediate attack)
                 gain.gain.setValueAtTime(0.3, now);
