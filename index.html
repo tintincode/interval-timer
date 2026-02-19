@@ -658,7 +658,31 @@
         // ============================================
         class SoundManager {
             constructor() {
-                this.cache = {};
+                this.cache = {}; // Will store pre-loaded Audio elements
+                this.isUnlocked = false;
+            }
+
+            // Pre-create and load all required audio elements.
+            // This must be called within a user gesture on iOS.
+            primeAllSounds() {
+                const soundsToPrime = [
+                    { freq: 1200, duration: 0.1 },  // Countdown
+                    { freq: 800, duration: 0.15 }, // Work Start
+                    { freq: 400, duration: 0.15 }, // Rest Start
+                    { freq: 700, duration: 0.12 }, // Complete 1
+                    { freq: 900, duration: 0.12 }, // Complete 2
+                    { freq: 1100, duration: 0.18 }, // Complete 3
+                ];
+
+                soundsToPrime.forEach(({ freq, duration }) => {
+                    const key = `${freq}-${duration}`;
+                    if (!this.cache[key]) {
+                        const url = this.createBeepUrl(freq, duration, 30);
+                        const audio = new Audio(url);
+                        audio.load(); // Important: load the audio data
+                        this.cache[key] = audio;
+                    }
+                });
             }
 
             // Generate a WAV file blob URL
@@ -713,25 +737,36 @@
             }
 
             async unlock() {
-                // Play a silent sound via Audio element to unlock the media channel on iOS
-                const url = this.createBeepUrl(0, 0.1, 0);
-                const audio = new Audio(url);
+                if (this.isUnlocked) return;
+
+                this.primeAllSounds();
+
+                // Play a silent sound to satisfy the gesture requirement and unlock the channel
+                const silentUrl = this.createBeepUrl(0, 0.01, 0);
+                const silentAudio = new Audio(silentUrl);
                 try {
-                    await audio.play();
+                    await silentAudio.play();
+                    this.isUnlocked = true;
+                    console.log('✓ Audio channel unlocked');
                 } catch (e) {
-                    // Expected if no user interaction yet
+                    console.error('Audio unlock failed', e);
                 }
             }
 
             playTone(freq, duration) {
-                const key = `${freq}-${duration}`;
-                if (!this.cache[key]) {
-                    // Use volume 30% to match previous gain of 0.3
-                    this.cache[key] = this.createBeepUrl(freq, duration, 30);
+                if (!this.isUnlocked) {
+                    console.warn('Audio not unlocked, cannot play tone.');
+                    return;
                 }
+                const key = `${freq}-${duration}`;
+                const audio = this.cache[key];
                 
-                const audio = new Audio(this.cache[key]);
-                audio.play().catch(e => console.error("Play failed", e));
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.error(`Play failed for ${key}:`, e));
+                } else {
+                    console.error(`Sound not primed: ${key}`);
+                }
             }
 
             playCountdown() {
