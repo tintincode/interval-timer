@@ -295,6 +295,9 @@
                                 <span id="circuit-display" class="text-sm font-bold text-blue-500/50 uppercase tracking-[0.2em] tabular-nums"> </span>
                                 <span id="round-display" class="text-sm font-bold text-white/30 uppercase tracking-[0.2em] mt-1 tabular-nums">Ready</span>
                                 <span id="total-time-display" class="text-sm font-bold text-white/60 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums">Total: --:--</span>
+                                <div id="total-progress-bar-container" class="w-28 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300">
+                                    <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -528,11 +531,6 @@
             </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Total Progress Bar -->
-        <div class="absolute bottom-0 left-0 w-full h-3 bg-white/10 z-30">
-            <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
         </div>
 
         <div id="message-box" class="fixed top-8 left-1/2 -translate-x-1/2 px-8 py-3 rounded-full apple-glass text-white font-black text-[10px] shadow-2xl transition-all opacity-0 pointer-events-none z-50 uppercase tracking-widest">Workout Complete</div>
@@ -1837,19 +1835,23 @@
         }
 
         function updateTotalTimeDisplay(secondsOverride = null) {
+            const totalProgressBarContainer = document.getElementById('total-progress-bar-container');
+
             // If a specific time is provided (during workout), use it. 
             // Otherwise calculate from settings (during setup).
             const totalSeconds = secondsOverride !== null ? secondsOverride : calculateTotalTime();
             
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            totalTimeDisplayEl.innerText = `Total: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            totalTimeDisplayEl.innerText = `Total: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
             // Hide total time if 0 and not currently running a workout (setup mode)
             if (secondsOverride === null && totalSeconds === 0) {
                 totalTimeDisplayEl.classList.add('opacity-0');
+                if (totalProgressBarContainer) totalProgressBarContainer.classList.add('opacity-0');
             } else {
                 totalTimeDisplayEl.classList.remove('opacity-0');
+                if (totalProgressBarContainer) totalProgressBarContainer.classList.remove('opacity-0');
             }
 
             // Update Total Progress Bar only when timer is NOT running.
@@ -2006,12 +2008,27 @@
                 totalTimeRemaining--;
             }
 
-            // If skipping manually (time left on clock), deduct it from total remaining
-            if (isManualSkip && secondsRemaining > 0) {
-                workoutEndTime -= secondsRemaining * 1000;
-                totalTimeRemaining -= secondsRemaining;
-                if (totalTimeRemaining < 0) totalTimeRemaining = 0;
-                updateTotalTimeDisplay(totalTimeRemaining); // Instant update for skip
+            // If skipping manually, deduct precise time left in current phase
+            if (isManualSkip) {
+                let timeToSkip = 0;
+                if (isPaused) {
+                    timeToSkip = pausedTimeRemainingMs;
+                } else {
+                    timeToSkip = Math.max(0, phaseEndTime - Date.now());
+                }
+
+                if (timeToSkip > 0) {
+                    workoutEndTime -= timeToSkip;
+                    
+                    // Update integer display
+                    const skippedSeconds = Math.ceil(timeToSkip / 1000);
+                    totalTimeRemaining = Math.max(0, totalTimeRemaining - skippedSeconds);
+                    updateTotalTimeDisplay(totalTimeRemaining);
+
+                    // Force update progress bar immediately
+                    const preciseTotalTime = Math.max(0, (workoutEndTime - Date.now()) / 1000);
+                    updateProgressBar(preciseTotalTime, true);
+                }
             }
             
             if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
@@ -2118,6 +2135,10 @@
             timer = null; 
             
             await wakeLockManager.disable();
+
+            // Set final time to 00:00
+            totalTimeRemaining = 0;
+            updateTotalTimeDisplay(totalTimeRemaining);
             
             // Visual celebration - synchronized pulsing
             
@@ -2151,9 +2172,10 @@
             progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400');
             progressCircle.classList.add('text-yellow-300');
 
-            // Make total progress bar yellow
+            // Make total progress bar yellow and full to signify 100% completion
             totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses);
             totalProgressBar.classList.add('bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
+            totalProgressBar.style.width = '100%';
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
             btnStart.innerText = "Start";
@@ -2239,6 +2261,37 @@
         });
         btnPause.addEventListener('click', togglePause);
         document.getElementById('btn-reset').addEventListener('click', resetTimer);
+
+        // Handle page visibility changes to pause/resume timer automatically
+        document.addEventListener('visibilitychange', () => {
+            // If timer is not running, or if it's explicitly paused by the user, do nothing.
+            if (!timer || isPaused) {
+                return;
+            }
+
+            if (document.hidden) {
+                // Page is hidden: Implicitly pause the timer.
+                // Cancel the animation loop and store the exact time when it was hidden.
+                cancelAnimationFrame(timer);
+                pausedTimeRemainingMs = Math.max(0, phaseEndTime - Date.now());
+                pauseStartTime = Date.now();
+                console.log('Page hidden, timer paused implicitly.');
+            } else {
+                // Page is visible: Implicitly resume the timer if it was running.
+                // Check if pauseStartTime was set, which indicates an implicit pause.
+                if (pauseStartTime > 0) {
+                    const pauseDuration = Date.now() - pauseStartTime;
+                    
+                    // Adjust the master workout end time and current phase end time
+                    workoutEndTime += pauseDuration;
+                    phaseEndTime = Date.now() + pausedTimeRemainingMs;
+                    
+                    pauseStartTime = 0;
+                    runTimerLoop();
+                    console.log('Page visible, timer resumed implicitly.');
+                }
+            }
+        });
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
