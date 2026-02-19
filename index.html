@@ -666,6 +666,7 @@
         const totalTimeDisplayEl = document.getElementById('total-time-display');
         const exerciseTextEl = document.getElementById('current-exercise');
         const totalProgressBar = document.getElementById('total-progress-bar');
+        const totalProgressBarContainer = document.getElementById('total-progress-bar-container');
         const progressCircle = document.getElementById('progress-circle');
         const navIndicator = document.getElementById('nav-indicator');
         const btnMute = document.getElementById('btn-mute');
@@ -1835,8 +1836,6 @@
         }
 
         function updateTotalTimeDisplay(secondsOverride = null) {
-            const totalProgressBarContainer = document.getElementById('total-progress-bar-container');
-
             // If a specific time is provided (during workout), use it. 
             // Otherwise calculate from settings (during setup).
             const totalSeconds = secondsOverride !== null ? secondsOverride : calculateTotalTime();
@@ -2144,7 +2143,7 @@
             
             // Change text to soft pastel yellow
             exerciseTextEl.innerText = "Amazing!"; 
-            exerciseTextEl.classList.remove('text-blue-400', 'text-emerald-500', 'text-orange-500', 'text-teal-400');
+            exerciseTextEl.classList.remove(...allTextClasses);
             exerciseTextEl.classList.add('text-yellow-300');
             
             // Add pulsing to text
@@ -2169,7 +2168,7 @@
             }
             
             // Make progress circle soft yellow for completion
-            progressCircle.classList.remove('text-blue-500', 'text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400');
+            progressCircle.classList.remove(...allCircleClasses, 'text-yellow-400');
             progressCircle.classList.add('text-yellow-300');
 
             // Make total progress bar yellow and full to signify 100% completion
@@ -2213,7 +2212,7 @@
             
             // Reset UI - Status and Exercise
             exerciseTextEl.innerText = 'Get Ready';
-            exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400', 'text-blue-400', 'text-emerald-400', 'text-orange-400', 'text-teal-400', 'pulse-text');
+            exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400', 'pulse-text');
             exerciseTextEl.classList.add('text-blue-400');
             
             timeLeftEl.innerText = '00:00';
@@ -2228,7 +2227,7 @@
             btnPause.classList.add('hidden');
             
             // Reset progress circle
-            progressCircle.classList.remove('text-emerald-500', 'text-orange-500', 'text-teal-500', 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
+            progressCircle.classList.remove(...allCircleClasses, 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
             progressCircle.classList.add('text-blue-500');
             updateProgress(100);
 
