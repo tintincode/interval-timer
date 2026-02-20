@@ -123,52 +123,12 @@
         .ios-button.bg-red-500\/10.is-pressed { background-color: rgba(239, 68, 68, 0.25) !important; }
         .ios-button.bg-white\/5.is-pressed { background-color: rgba(255, 255, 255, 0.15) !important; }
 
-        @keyframes pulseBig {
-            0%, 100% { 
-                transform: scale(1);
-            }
-            50% { 
-                transform: scale(1.15);
-            }
-        }
-
-        @keyframes pulseCircleGlow {
-            0%, 100% { 
-                stroke-width: 10;
-                opacity: 0.7;
-            }
-            50% { 
-                stroke-width: 12;
-                opacity: 0.9;
-            }
-        }
-        
-        @keyframes pulseRadialGlow {
-            0%, 100% { 
-                opacity: 0.2;
-                transform: scale(1);
-            }
-            50% { 
-                opacity: 0.4;
-                transform: scale(1.1);
-            }
-        }
-
-        .pulse-text {
-            animation: pulseBig 1s ease-in-out infinite;
-        }
-
-        .pulse-circle-stroke {
-            animation: pulseCircleGlow 1s ease-in-out infinite;
-        }
-        
         .pulse-radial-glow {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(253, 224, 71, 0.25) 0%, rgba(253, 224, 71, 0.15) 30%, rgba(253, 224, 71, 0.06) 50%, rgba(253, 224, 71, 0.02) 70%, transparent 85%);
-            animation: pulseRadialGlow 1s ease-in-out infinite;
             pointer-events: none;
             z-index: 1;
             filter: blur(12px);
@@ -438,7 +398,7 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <input type="text" id="input-work" value="00:45" data-seconds="45"
+                                <input type="text" id="input-work" value="00:30" data-seconds="30"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
@@ -696,7 +656,7 @@
             }
 
             async reEnable() {
-                if (this.wakeLock !== null || this.isSupported) {
+                if (this.wakeLock !== null && this.isSupported) {
                     await this.disable();
                     await this.enable();
                 }
@@ -873,6 +833,61 @@
         }
 
         const soundManager = new SoundManager();
+
+        // ============================================
+        // ANIMATION MANAGER (Web Animations API)
+        // ============================================
+        class AnimationManager {
+            constructor() {
+                this.animations = new Map(); // Stores active animations by element
+            }
+
+            stopAll() {
+                this.animations.forEach(anim => anim.cancel());
+                this.animations.clear();
+            }
+
+            pulseScale(element) {
+                const anim = element.animate([
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.15)' },
+                    { transform: 'scale(1)' }
+                ], {
+                    duration: 1000,
+                    iterations: Infinity,
+                    easing: 'ease-in-out'
+                });
+                this.animations.set(element, anim);
+            }
+
+            pulseStroke(element) {
+                const anim = element.animate([
+                    { strokeWidth: '10px', opacity: 0.7 },
+                    { strokeWidth: '12px', opacity: 0.9 },
+                    { strokeWidth: '10px', opacity: 0.7 }
+                ], {
+                    duration: 1000,
+                    iterations: Infinity,
+                    easing: 'ease-in-out'
+                });
+                this.animations.set(element, anim);
+            }
+            
+            pulseGlow(element) {
+                const anim = element.animate([
+                    { opacity: 0.2, transform: 'scale(1)' },
+                    { opacity: 0.4, transform: 'scale(1.1)' },
+                    { opacity: 0.2, transform: 'scale(1)' }
+                ], {
+                    duration: 1000,
+                    iterations: Infinity,
+                    easing: 'ease-in-out'
+                });
+                this.animations.set(element, anim);
+            }
+        }
+
+        const animationManager = new AnimationManager();
 
         // ============================================
         // TIMER CODE
@@ -2269,22 +2284,25 @@
                 state.secondsRemaining = currentSeconds;
                 timeLeftEl.innerText = formatTime(state.secondsRemaining);
                 
-                if (state.totalTimeRemaining > 0) state.totalTimeRemaining--;
-                updateTotalTimeDisplay(state.totalTimeRemaining); // Update text and non-timer bar state
+                // Derive total time remaining from precise workoutEndTime to prevent drift
+                const preciseTotalTime = state.workoutEndTime > 0 ? Math.max(0, (state.workoutEndTime - now) / 1000) : 0;
+                // Keep integer state in sync for skip calculations
+                state.totalTimeRemaining = Math.ceil(preciseTotalTime);
+                updateTotalTimeDisplay(Math.ceil(preciseTotalTime));
                 
                 if (state.secondsRemaining <= 3 && state.secondsRemaining > 0) {
                     beep('countdown');
                     speak(state.secondsRemaining.toString());
                 }
             }
-            const preciseTotalTime = state.workoutEndTime > 0 ? (state.workoutEndTime - Date.now()) / 1000 : 0;
+            const preciseTotalTime = state.workoutEndTime > 0 ? Math.max(0, (state.workoutEndTime - Date.now()) / 1000) : 0;
             updateProgressBar(preciseTotalTime, true);
         }
 
         function nextPhase(isManualSkip = false) {
             if (!state.timer) return;
-            // If manually skipping, cancel current loop frame to prevent double-fire
-            if (state.timer) cancelAnimationFrame(state.timer);
+            // Cancel current loop frame to prevent double-fire
+            cancelAnimationFrame(state.timer);
             
             // If this is a natural transition (not a manual skip), the last second just ended.
             // We need to decrement the total time to account for it before starting the next phase.
@@ -2352,8 +2370,9 @@
             }
             
             // Clean up any completion animations from previous workout
-            exerciseTextEl.classList.remove('pulse-text', 'text-yellow-300', 'text-yellow-400');
-            progressCircle.classList.remove('pulse-circle-stroke', 'text-yellow-300', 'text-yellow-400');
+            animationManager.stopAll();
+            exerciseTextEl.classList.remove('text-yellow-300', 'text-yellow-400');
+            progressCircle.classList.remove('text-yellow-300', 'text-yellow-400');
             
             // Remove completion glow if it exists
             const completionGlow = document.getElementById('completion-glow');
@@ -2385,7 +2404,7 @@
         }
 
         async function togglePause() { 
-            if (!state.timer) return; 
+            if (!state.timer && !state.isPaused) return; 
             state.isPaused = !state.isPaused; 
             
             if (state.isPaused) {
@@ -2430,14 +2449,14 @@
             exerciseTextEl.classList.remove(...allTextClasses);
             exerciseTextEl.classList.add('text-yellow-300');
             
-            // Add pulsing to text
-            exerciseTextEl.classList.add('pulse-text');
+            // WAAPI: Pulse Text
+            animationManager.pulseScale(exerciseTextEl);
             
             // Make the circle full (100%) so entire circle glows
             refillProgress();
             
-            // Make progress circle pulse
-            progressCircle.classList.add('pulse-circle-stroke');
+            // WAAPI: Pulse Circle Stroke
+            animationManager.pulseStroke(progressCircle);
             
             // Add circular radial glow behind the circle - soft pastel yellow
             const progressContainer = document.querySelector('.progress-svg-container');
@@ -2445,6 +2464,9 @@
             glowDiv.className = 'pulse-radial-glow';
             glowDiv.id = 'completion-glow';
             progressContainer.insertBefore(glowDiv, progressContainer.firstChild);
+            
+            // WAAPI: Pulse Radial Glow
+            animationManager.pulseGlow(glowDiv);
             
             // Vibration feedback (if supported)
             if (navigator.vibrate) {
@@ -2482,6 +2504,7 @@
             
             // Cleanup resources
             await wakeLockManager.disable();
+            animationManager.stopAll();
             speechManager.cancel();
             
             // Reset all state variables
@@ -2497,7 +2520,7 @@
             
             // Reset UI - Status and Exercise
             exerciseTextEl.innerText = 'Get Ready';
-            exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400', 'pulse-text');
+            exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400');
             exerciseTextEl.classList.add('text-blue-400');
             
             timeLeftEl.innerText = '00:00';
@@ -2512,7 +2535,7 @@
             btnPause.classList.add('hidden');
             
             // Reset progress circle
-            progressCircle.classList.remove(...allCircleClasses, 'text-yellow-400', 'text-yellow-300', 'pulse-circle-stroke');
+            progressCircle.classList.remove(...allCircleClasses, 'text-yellow-400', 'text-yellow-300');
             progressCircle.classList.add('text-blue-500');
             updateProgress(100);
 
