@@ -486,7 +486,7 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="input-rounds" value="3"
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="input-rounds" value="3" min="1"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
@@ -1330,7 +1330,7 @@
                         setTimeInputSeconds('input-cooldown', settings.coolDownTime);
                     }
                     
-                    inputRounds.value = settings.circuits || inputRounds.value;
+                    inputRounds.value = Math.max(1, parseInt(settings.circuits) || 1);
                     voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
                     handleMuteToggle(voiceEnabled);
                     
