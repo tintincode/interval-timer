@@ -332,13 +332,13 @@
     <div class="max-w-md w-full h-full flex flex-col relative overflow-hidden">
         
         <header class="flex justify-between items-center px-4 md:px-8 pt-10 mb-3 flex-shrink-0">
-            <button onclick="switchTab('settings')" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl text-white/70">
+            <button id="btn-settings" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl text-white/70">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             </button>
-            <button id="btn-mute" onclick="toggleMute()" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl">
+            <button id="btn-mute" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl">
                 <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
@@ -392,7 +392,7 @@
                             Pause
                         </button>
                     </div>
-                    <button id="btn-skip" onclick="nextPhase(true)" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
+                    <button id="btn-skip" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
                         Skip
                     </button>
                 </div>
@@ -403,7 +403,7 @@
                 <!-- Page header -->
                 <div class="flex justify-between items-center pt-4 pb-5 px-1">
                     <h2 class="text-3xl font-black text-white tracking-tight">Settings</h2>
-                    <button onclick="switchTab('timer'); showSettingsSaved()" class="ios-button bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold tracking-wide transition-colors shadow-lg shadow-blue-900/30">Done</button>
+                    <button id="btn-settings-done" class="ios-button bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold tracking-wide transition-colors shadow-lg shadow-blue-900/30">Done</button>
                 </div>
 
                 <div class="space-y-3">
@@ -421,19 +421,16 @@
                                 <p class="text-[11px] text-white/30 leading-tight mt-0.5">default duration per exercise</p>
                             </div>
                             <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 overflow-hidden flex-shrink-0">
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeDecrement('input-work', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-decrement" data-target="input-work">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <input type="text" id="input-work" value="00:45" data-seconds="45"
-                                    onclick="this.select()" onblur="handleTimeBlur('input-work'); updateIntervalRowDim('input-work')"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeIncrement('input-work', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-work', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-increment" data-target="input-work">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -448,19 +445,16 @@
                                 <p class="text-[11px] text-white/30 leading-tight mt-0.5">between exercises</p>
                             </div>
                             <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 overflow-hidden flex-shrink-0">
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeDecrement('input-rest', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-decrement" data-target="input-rest">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <input type="text" id="input-rest" value="00:15" data-seconds="15"
-                                    onclick="this.select()" onblur="handleTimeBlur('input-rest'); updateIntervalRowDim('input-rest')"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeIncrement('input-rest', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-rest', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-increment" data-target="input-rest">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -475,19 +469,16 @@
                                 <p class="text-[11px] text-white/30 leading-tight mt-0.5">full rounds through all exercises</p>
                             </div>
                             <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 overflow-hidden flex-shrink-0">
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startDecrement('input-rounds')" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startDecrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="decrement" data-target="input-rounds">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" id="input-rounds" value="3"
-                                    onclick="this.select()"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startIncrement('input-rounds')" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startIncrement('input-rounds')" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="increment" data-target="input-rounds">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -502,19 +493,16 @@
                                 <p class="text-[11px] text-white/30 leading-tight mt-0.5">countdown before workout starts</p>
                             </div>
                             <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 overflow-hidden flex-shrink-0">
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeDecrement('input-prepare', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-decrement" data-target="input-prepare">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <input type="text" id="input-prepare" value="00:10" data-seconds="10"
-                                    onclick="this.select()" onblur="handleTimeBlur('input-prepare'); updateIntervalRowDim('input-prepare')"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeIncrement('input-prepare', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-prepare', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-increment" data-target="input-prepare">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -529,19 +517,16 @@
                                 <p class="text-[11px] text-white/30 leading-tight mt-0.5">relaxed phase after last exercise</p>
                             </div>
                             <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 overflow-hidden flex-shrink-0">
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeDecrement('input-cooldown', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeDecrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-decrement" data-target="input-cooldown">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <input type="text" id="input-cooldown" value="00:00" data-seconds="0"
-                                    onclick="this.select()" onblur="handleTimeBlur('input-cooldown'); updateIntervalRowDim('input-cooldown')"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <button class="ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
-                                    ontouchstart="startTimeIncrement('input-cooldown', event)" ontouchend="stopAdjustment()"
-                                    onmousedown="if(!('ontouchstart' in window)) startTimeIncrement('input-cooldown', event)" onmouseup="stopAdjustment()" onmouseleave="stopAdjustment()">
+                                <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
+                                    data-action="time-increment" data-target="input-cooldown">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -557,7 +542,7 @@
                         </div>
                         <div class="apple-glass rounded-[20px] p-4 space-y-2">
                             <div id="exercises-list" class="space-y-2"></div>
-                            <button onclick="addNewExerciseRow()" class="add-exercise-btn ios-button w-full py-3 rounded-xl bg-white/5 border border-dashed border-white/15 text-xs font-bold uppercase tracking-wider text-white/40 transition-all flex items-center justify-center gap-2 mt-1">
+                            <button id="btn-add-exercise" class="add-exercise-btn ios-button w-full py-3 rounded-xl bg-white/5 border border-dashed border-white/15 text-xs font-bold uppercase tracking-wider text-white/40 transition-all flex items-center justify-center gap-2 mt-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                 Add Exercise
                             </button>
@@ -568,8 +553,7 @@
                     <div>
                         <p class="text-[11px] font-black text-white/30 uppercase tracking-[0.18em] mb-2 px-1">Audio</p>
                         <div class="apple-glass rounded-[20px] overflow-hidden divide-y divide-white/[0.07]">
-                            <button id="btn-audio-voice" onclick="setAudioType('voice')"
-                                class="ios-button flex items-center justify-between w-full px-4 py-3.5 transition-colors">
+                            <button id="btn-audio-voice" class="ios-button flex items-center justify-between w-full px-4 py-3.5 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-xl bg-blue-500/15 flex items-center justify-center flex-shrink-0">
                                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
@@ -583,8 +567,7 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                 </span>
                             </button>
-                            <button id="btn-audio-beep" onclick="setAudioType('beep')"
-                                class="ios-button flex items-center justify-between w-full px-4 py-3.5 transition-colors">
+                            <button id="btn-audio-beep" class="ios-button flex items-center justify-between w-full px-4 py-3.5 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center flex-shrink-0">
                                         <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
@@ -608,7 +591,7 @@
                             <!-- Routine selector -->
                             <div class="p-4 space-y-3">
                                 <div class="relative" id="custom-routine-dropdown">
-                                    <button id="ac-ls-dropdown-select" onclick="toggleDropdown()" class="w-full flex items-center justify-between bg-white/5 hover:bg-white/8 border border-white/10 rounded-xl pl-4 pr-3 py-3 text-sm font-medium text-white transition-colors outline-none">
+                                    <button id="ac-ls-dropdown-select" class="w-full flex items-center justify-between bg-white/5 hover:bg-white/8 border border-white/10 rounded-xl pl-4 pr-3 py-3 text-sm font-medium text-white transition-colors outline-none">
                                         <span id="ac-ls-dropdown-title" class="truncate text-white/60">Select Routine</span>
                                         <svg class="w-3.5 h-3.5 text-white/30 ml-2 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                                     </button>
@@ -617,20 +600,20 @@
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <button id="btn-update-routine" onclick="updateRoutine()" class="ios-button bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-400 transition-all opacity-40 pointer-events-none">Update</button>
-                                    <button onclick="saveRoutine()" class="ios-button bg-blue-500/10 border border-blue-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-blue-400 transition-colors">Save New</button>
-                                    <button id="btn-rename-routine" onclick="renameRoutine()" class="ios-button bg-white/5 border border-white/10 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-white/40 transition-all opacity-40 pointer-events-none">Rename</button>
-                                    <button onclick="deleteRoutine()" class="ios-button bg-red-500/10 border border-red-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-red-400 transition-colors">Delete</button>
+                                    <button id="btn-update-routine" class="ios-button bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-400 transition-all opacity-40 pointer-events-none">Update</button>
+                                    <button id="btn-save-routine" class="ios-button bg-blue-500/10 border border-blue-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-blue-400 transition-colors">Save New</button>
+                                    <button id="btn-rename-routine" class="ios-button bg-white/5 border border-white/10 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-white/40 transition-all opacity-40 pointer-events-none">Rename</button>
+                                    <button id="btn-delete-routine" class="ios-button bg-red-500/10 border border-red-500/20 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-red-400 transition-colors">Delete</button>
                                 </div>
                             </div>
                             <!-- Backup/Restore -->
                             <div class="border-t border-white/[0.07] flex">
-                                <input type="file" id="import-file" accept=".json" class="hidden" onchange="handleFileImport(this)">
-                                <button onclick="exportRoutines()" class="flex-1 ios-button py-3 text-xs font-bold uppercase tracking-wider text-white/30 hover:text-white/50 transition-colors border-r border-white/[0.07] flex items-center justify-center gap-2">
+                                <input type="file" id="import-file" accept=".json" class="hidden">
+                                <button id="btn-export" class="flex-1 ios-button py-3 text-xs font-bold uppercase tracking-wider text-white/30 hover:text-white/50 transition-colors border-r border-white/[0.07] flex items-center justify-center gap-2">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     Backup
                                 </button>
-                                <button onclick="document.getElementById('import-file').click()" class="flex-1 ios-button py-3 text-xs font-bold uppercase tracking-wider text-white/30 hover:text-white/50 transition-colors flex items-center justify-center gap-2">
+                                <button id="btn-import" class="flex-1 ios-button py-3 text-xs font-bold uppercase tracking-wider text-white/30 hover:text-white/50 transition-colors flex items-center justify-center gap-2">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
                                     Restore
                                 </button>
@@ -1462,14 +1445,20 @@
                 <div class="row-content w-full flex items-center bg-white/5 py-3 px-4">
                     <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
                     
-                    <input type="text" value="${formattedDuration}" placeholder="--:--" onclick="this.select()" class="exercise-duration-input w-16 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-bold mx-3">
+                    <input type="text" value="${formattedDuration}" placeholder="--:--" class="exercise-duration-input w-16 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-bold mx-3">
 
-                    <button onclick="removeExerciseRow(this)" class="delete-btn ios-button w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
+                    <button class="delete-btn ios-button w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
             `;
             container.appendChild(div);
+            
+            // Wire delete button
+            div.querySelector('.delete-btn').addEventListener('click', () => removeExerciseRow(div));
+            
+            // Wire duration input click-to-select
+            div.querySelector('.exercise-duration-input').addEventListener('click', function() { this.select(); });
             
             // Trigger animation
             requestAnimationFrame(() => {
@@ -1510,8 +1499,7 @@
             updateExercisesFromUI();
         }
 
-        function removeExerciseRow(btn) {
-            const row = btn.closest('.exercise-row');
+        function removeExerciseRow(row) {
             
             // Set explicit height for transition
             row.style.maxHeight = row.scrollHeight + 'px';
@@ -2467,118 +2455,178 @@
             console.log('✓ Reset complete');
         }
 
-        btnStart.addEventListener('click', async () => {
-            // Initialize speech FIRST (must be synchronous in user gesture for iOS)
-            speechManager.initialize();
-            await soundManager.unlock();
+        // ============================================
+        // CENTRALIZED EVENT LISTENER SETUP
+        // ============================================
+        function setupEventListeners() {
 
-            if (timer && isPaused) {
-                togglePause();
-            } else {
-                startWorkout();
-            }
-        });
-        btnPause.addEventListener('click', togglePause);
-        document.getElementById('btn-reset').addEventListener('click', resetTimer);
+            // --- Header buttons ---
+            document.getElementById('btn-settings').addEventListener('click', () => switchTab('settings'));
+            document.getElementById('btn-mute').addEventListener('click', toggleMute);
 
-        // Handle page visibility changes to pause/resume timer automatically
-        document.addEventListener('visibilitychange', () => {
-            // If timer is not running, or if it's explicitly paused by the user, do nothing.
-            if (!timer || isPaused) {
-                return;
-            }
-
-            if (document.hidden) {
-                // Page is hidden: Implicitly pause the timer.
-                // Cancel the animation loop and store the exact time when it was hidden.
-                cancelAnimationFrame(timer);
-                pausedTimeRemainingMs = Math.max(0, phaseEndTime - Date.now());
-                pauseStartTime = Date.now();
-                console.log('Page hidden, timer paused implicitly.');
-            } else {
-                // Page is visible: Implicitly resume the timer if it was running.
-                // Check if pauseStartTime was set, which indicates an implicit pause.
-                if (pauseStartTime > 0) {
-                    const pauseDuration = Date.now() - pauseStartTime;
-                    
-                    // Adjust the master workout end time and current phase end time
-                    workoutEndTime += pauseDuration;
-                    phaseEndTime = Date.now() + pausedTimeRemainingMs;
-                    
-                    pauseStartTime = 0;
-                    runTimerLoop();
-                    console.log('Page visible, timer resumed implicitly.');
+            // --- Timer controls ---
+            document.getElementById('btn-skip').addEventListener('click', () => nextPhase(true));
+            document.getElementById('btn-reset').addEventListener('click', resetTimer);
+            document.getElementById('btn-start').addEventListener('click', async () => {
+                speechManager.initialize();
+                await soundManager.unlock();
+                if (timer && isPaused) {
+                    togglePause();
+                } else {
+                    startWorkout();
                 }
-            }
-        });
-
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Ignore shortcuts if user is typing in an input field
-            if (e.target.tagName === 'INPUT') return;
-
-            switch(e.code) {
-                case 'Space':
-                    e.preventDefault(); // Prevent scrolling
-                    if (timer || isPaused) {
-                        togglePause();
-                    } else {
-                        speechManager.initialize();
-                        soundManager.unlock().then(() => {
-                            startWorkout();
-                        });
-                    }
-                    break;
-                case 'KeyR':
-                    resetTimer();
-                    break;
-                case 'KeyM':
-                    toggleMute();
-                    break;
-                case 'ArrowRight':
-                    if (timer && !isPaused) nextPhase(true);
-                    break;
-            }
-        });
-
-        // Generic Pointer Events Handler for consistent button feedback across iOS/Android/PC
-        document.addEventListener('pointerdown', (e) => {
-            const btn = e.target.closest('.ios-button');
-            if (!btn) return;
-
-            btn.classList.add('is-pressed');
-            try { btn.setPointerCapture(e.pointerId); } catch(e){}
-
-            const clear = (e) => {
-                btn.classList.remove('is-pressed');
-                try { btn.releasePointerCapture(e.pointerId); } catch(e){}
-                ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(evt => {
-                    btn.removeEventListener(evt, clear);
-                });
-            };
-            
-            ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(evt => {
-                btn.addEventListener(evt, clear);
             });
-        });
+            document.getElementById('btn-pause').addEventListener('click', togglePause);
 
-        // Add listeners to differentiate between a tap and a scroll on touch devices
-        window.addEventListener('touchstart', (e) => {
-            // Reset scroll detection on a new touch
-            isScrolling = false;
-            touchStartY = e.touches[0].clientY;
-        }, { passive: true });
+            // --- Settings done button ---
+            document.getElementById('btn-settings-done').addEventListener('click', () => {
+                switchTab('timer');
+                showSettingsSaved();
+            });
 
-        window.addEventListener('touchmove', (e) => {
-            // If the touch has moved more than 10px vertically, it's a scroll
-            if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
-                if (!isScrolling) { // Only trigger once per scroll
-                    isScrolling = true;
-                    // A scroll should cancel any pending button press
-                    cancelAllAdjustments();
+            // --- Audio type selection ---
+            document.getElementById('btn-audio-voice').addEventListener('click', () => setAudioType('voice'));
+            document.getElementById('btn-audio-beep').addEventListener('click', () => setAudioType('beep'));
+
+            // --- Routine management ---
+            document.getElementById('ac-ls-dropdown-select').addEventListener('click', () => toggleDropdown());
+            document.getElementById('btn-update-routine').addEventListener('click', updateRoutine);
+            document.getElementById('btn-save-routine').addEventListener('click', saveRoutine);
+            document.getElementById('btn-rename-routine').addEventListener('click', renameRoutine);
+            document.getElementById('btn-delete-routine').addEventListener('click', deleteRoutine);
+
+            // --- Export / Import ---
+            document.getElementById('btn-export').addEventListener('click', exportRoutines);
+            document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
+            document.getElementById('import-file').addEventListener('change', function() { handleFileImport(this); });
+
+            // --- Add exercise ---
+            document.getElementById('btn-add-exercise').addEventListener('click', addNewExerciseRow);
+
+            // --- Time inputs: click-to-select and blur handling ---
+            ['input-work', 'input-rest', 'input-prepare', 'input-cooldown'].forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('click', function() { this.select(); });
+                input.addEventListener('blur', function() {
+                    handleTimeBlur(id);
+                    updateIntervalRowDim(id);
+                });
+            });
+
+            // input-rounds: click-to-select
+            document.getElementById('input-rounds').addEventListener('click', function() { this.select(); });
+
+            // --- Stepper buttons: unified pointerdown handler ---
+            // Uses data-action and data-target attributes set on each button in HTML.
+            // pointerdown handles both mouse and touch with no duplication.
+            document.addEventListener('pointerdown', (e) => {
+                const btn = e.target.closest('.stepper-btn');
+                if (!btn) return;
+
+                const action = btn.dataset.action;
+                const target = btn.dataset.target;
+                if (!action || !target) return;
+
+                let actionFn;
+                if (action === 'time-increment') actionFn = () => incrementTimeValue(target);
+                else if (action === 'time-decrement') actionFn = () => decrementTimeValue(target);
+                else if (action === 'increment') actionFn = () => incrementValue(target);
+                else if (action === 'decrement') actionFn = () => decrementValue(target);
+                else return;
+
+                startAdjustment(actionFn);
+
+                const stop = () => {
+                    stopAdjustment();
+                    btn.removeEventListener('pointerup', stop);
+                    btn.removeEventListener('pointercancel', stop);
+                    btn.removeEventListener('pointerleave', stop);
+                };
+                btn.addEventListener('pointerup', stop);
+                btn.addEventListener('pointercancel', stop);
+                btn.addEventListener('pointerleave', stop);
+            });
+
+            // --- Dropdown close on outside click ---
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('custom-routine-dropdown');
+                if (dropdown && !dropdown.contains(e.target)) {
+                    toggleDropdown(false);
                 }
-            }
-        }, { passive: true });
+            });
+
+            // --- Page visibility ---
+            document.addEventListener('visibilitychange', () => {
+                if (!timer || isPaused) return;
+                if (document.hidden) {
+                    cancelAnimationFrame(timer);
+                    pausedTimeRemainingMs = Math.max(0, phaseEndTime - Date.now());
+                    pauseStartTime = Date.now();
+                } else {
+                    if (pauseStartTime > 0) {
+                        const pauseDuration = Date.now() - pauseStartTime;
+                        workoutEndTime += pauseDuration;
+                        phaseEndTime = Date.now() + pausedTimeRemainingMs;
+                        pauseStartTime = 0;
+                        runTimerLoop();
+                    }
+                }
+            });
+
+            // --- Keyboard shortcuts ---
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT') return;
+                switch (e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        if (timer || isPaused) {
+                            togglePause();
+                        } else {
+                            speechManager.initialize();
+                            soundManager.unlock().then(() => startWorkout());
+                        }
+                        break;
+                    case 'KeyR': resetTimer(); break;
+                    case 'KeyM': toggleMute(); break;
+                    case 'ArrowRight': if (timer && !isPaused) nextPhase(true); break;
+                }
+            });
+
+            // --- Button press visual feedback (generic) ---
+            document.addEventListener('pointerdown', (e) => {
+                const btn = e.target.closest('.ios-button');
+                if (!btn) return;
+                btn.classList.add('is-pressed');
+                try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+                const clear = (ev) => {
+                    btn.classList.remove('is-pressed');
+                    try { btn.releasePointerCapture(ev.pointerId); } catch (_) {}
+                    ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(evt => btn.removeEventListener(evt, clear));
+                };
+                ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(evt => btn.addEventListener(evt, clear));
+            });
+
+            // --- Scroll vs tap detection (for stepper cancel) ---
+            window.addEventListener('touchstart', (e) => {
+                isScrolling = false;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
+                    if (!isScrolling) {
+                        isScrolling = true;
+                        cancelAllAdjustments();
+                    }
+                }
+            }, { passive: true });
+
+            // --- beforeunload cleanup ---
+            window.addEventListener('beforeunload', async () => {
+                await wakeLockManager.disable();
+                speechManager.cancel();
+            });
+        }
 
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
         window.onload = () => {
@@ -2586,24 +2634,12 @@
             loadSettings();
             renderExerciseList();
             setupAutoSave();
+            setupEventListeners();
             updateAllIntervalRowDims();
             timeLeftEl.innerText = formatTime(0);
             updateTotalTimeDisplay();
             updateCountsDisplay();
         };
-
-        window.addEventListener('beforeunload', async () => {
-            await wakeLockManager.disable();
-            speechManager.cancel();
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('custom-routine-dropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                toggleDropdown(false);
-            }
-        });
     </script>
 </body>
 </html>
