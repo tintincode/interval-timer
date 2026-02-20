@@ -1810,7 +1810,6 @@
         let isAdjusting = false; // Prevent double-fire on mobile
         
         // New state variables for scroll vs. tap detection
-        let tapTimeout = null;
         let isScrolling = false;
         let touchStartY = 0;
 
@@ -1835,27 +1834,22 @@
         }
 
         function startAdjustment(actionFn) {
-            // Don't start a new adjustment if one is in progress or if we are scrolling
             if (isAdjusting || isScrolling) return;
             isAdjusting = true;
 
-            const performActionAndHold = () => {
-                actionFn(); // Perform the first action
+            // Fire the first action immediately on press
+            actionFn();
 
-                // Set up the long-press timer to repeat the action
-                adjustmentTimeout = setTimeout(() => {
-                    adjustmentInterval = setInterval(actionFn, 150); // Repeat every 150ms
-                    
-                    // Speed up after 2 seconds
-                    speedUpTimeout = setTimeout(() => {
-                        clearInterval(adjustmentInterval);
-                        adjustmentInterval = setInterval(actionFn, 75); // Repeat faster
-                    }, 2000);
-                }, 420); // Wait 420ms after the first action to start repeating (total ~500ms)
-            };
+            // After 420ms hold, start repeating
+            adjustmentTimeout = setTimeout(() => {
+                adjustmentInterval = setInterval(actionFn, 150);
 
-            // Set a short timeout. If it's not cleared by a scroll, we consider it a tap/hold.
-            tapTimeout = setTimeout(performActionAndHold, 80);
+                // Speed up after 2 more seconds
+                speedUpTimeout = setTimeout(() => {
+                    clearInterval(adjustmentInterval);
+                    adjustmentInterval = setInterval(actionFn, 75);
+                }, 2000);
+            }, 420);
         }
 
         function startTimeIncrement(inputId, event) {
@@ -1868,14 +1862,15 @@
 
         function stopAdjustment() {
             clearTimeout(adjustmentTimeout);
+            adjustmentTimeout = null;
             clearTimeout(speedUpTimeout);
+            speedUpTimeout = null;
             clearInterval(adjustmentInterval);
+            adjustmentInterval = null;
             isAdjusting = false;
         }
 
         function cancelAllAdjustments() {
-            clearTimeout(tapTimeout);
-            tapTimeout = null;
             stopAdjustment();
         }
 
@@ -2518,7 +2513,9 @@
 
             // --- Stepper buttons: unified pointerdown handler ---
             // Uses data-action and data-target attributes set on each button in HTML.
-            // pointerdown handles both mouse and touch with no duplication.
+            // Stop listeners are on document (not the button) so they always fire,
+            // and we avoid pointerleave which fires unreliably once pointer capture
+            // is active (the press-feedback handler captures the pointer).
             document.addEventListener('pointerdown', (e) => {
                 const btn = e.target.closest('.stepper-btn');
                 if (!btn) return;
@@ -2538,13 +2535,11 @@
 
                 const stop = () => {
                     stopAdjustment();
-                    btn.removeEventListener('pointerup', stop);
-                    btn.removeEventListener('pointercancel', stop);
-                    btn.removeEventListener('pointerleave', stop);
+                    document.removeEventListener('pointerup', stop);
+                    document.removeEventListener('pointercancel', stop);
                 };
-                btn.addEventListener('pointerup', stop);
-                btn.addEventListener('pointercancel', stop);
-                btn.addEventListener('pointerleave', stop);
+                document.addEventListener('pointerup', stop);
+                document.addEventListener('pointercancel', stop);
             });
 
             // --- Dropdown close on outside click ---
@@ -2593,9 +2588,13 @@
             });
 
             // --- Button press visual feedback (generic) ---
+            // Stepper buttons are excluded: they manage their own press state and
+            // we must not capture their pointer here, as that would cause pointerleave
+            // to fire immediately and break the hold-to-repeat logic.
             document.addEventListener('pointerdown', (e) => {
                 const btn = e.target.closest('.ios-button');
                 if (!btn) return;
+                if (btn.classList.contains('stepper-btn')) return; // handled separately
                 btn.classList.add('is-pressed');
                 try { btn.setPointerCapture(e.pointerId); } catch (_) {}
                 const clear = (ev) => {
