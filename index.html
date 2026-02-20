@@ -2085,20 +2085,20 @@
         }
         
         function calculateTotalTime() {
-            const exercises = parseExercises();
-            if (exercises.length === 0) return 0;
+            if (exercisesData.length === 0) return 0;
             
             const circuits = parseInt(inputRounds.value);
             const restTime = getSecondsFromTimeInput('input-rest');
             const prepTime = getSecondsFromTimeInput('input-prepare');
             const coolDownTime = getSecondsFromTimeInput('input-cooldown');
+            const defaultWork = getSecondsFromTimeInput('input-work');
             
             let totalWorkTime = 0;
-            exercises.forEach(ex => {
-                totalWorkTime += ex.duration;
+            exercisesData.forEach(ex => {
+                totalWorkTime += (ex.duration !== null ? ex.duration : defaultWork);
             });
             
-            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercises.length * circuits - 1)) + coolDownTime;
+            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercisesData.length * circuits - 1)) + coolDownTime;
             
             return totalTime;
         }
@@ -2141,9 +2141,8 @@
         }
         
         function updateCountsDisplay() {
-            const exercises = parseExercises();
             const totalCircuits = parseInt(inputRounds.value) || 1;
-            const count = exercises.length || 0;
+            const count = exercisesData.length || 0;
             
             // Always show the counts based on current settings
             if (count > 0) {
@@ -2157,7 +2156,7 @@
             // Show first exercise as "Next" when stopped
             if (!state.timer && !state.isPaused) {
                 if (count > 0) {
-                    nextExerciseNameEl.innerText = exercises[0].name;
+                    nextExerciseNameEl.innerText = exercisesData[0].name || "Exercise 1";
                     nextUpContainer.classList.remove('opacity-0');
                     nextUpContainer.classList.add('opacity-100');
                 } else {
