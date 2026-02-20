@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
+    <meta name="description" content="A sleek interval timer for HIIT and circuit training — customisable exercises, voice cues and saved routines.">
+    <meta property="og:title" content="Interval Timer">
+    <meta property="og:description" content="A sleek interval timer for HIIT and circuit training.">
     <title>Interval Timer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -116,12 +119,12 @@
         #btn-mute.is-pressed { background-color: rgba(255, 255, 255, 0.15); }
         .add-exercise-btn.is-pressed { background-color: rgba(255, 255, 255, 0.2); color: white; }
         
-        /* For Routine & Export/Import buttons */
-        .ios-button.bg-emerald-500\/10.is-pressed { background-color: rgba(16, 185, 129, 0.25) !important; }
-        .ios-button.bg-blue-500\/10.is-pressed { background-color: rgba(59, 130, 246, 0.25) !important; }
-        .ios-button.bg-gray-500\/10.is-pressed { background-color: rgba(107, 114, 128, 0.25) !important; }
-        .ios-button.bg-red-500\/10.is-pressed { background-color: rgba(239, 68, 68, 0.25) !important; }
-        .ios-button.bg-white\/5.is-pressed { background-color: rgba(255, 255, 255, 0.15) !important; }
+        /* For Routine & Export/Import buttons — higher specificity avoids !important */
+        .ios-button.bg-emerald-500\/10.is-pressed { background-color: rgba(16, 185, 129, 0.25); }
+        .ios-button.bg-blue-500\/10.is-pressed { background-color: rgba(59, 130, 246, 0.25); }
+        .ios-button.bg-gray-500\/10.is-pressed { background-color: rgba(107, 114, 128, 0.25); }
+        .ios-button.bg-red-500\/10.is-pressed { background-color: rgba(239, 68, 68, 0.25); }
+        .ios-button.bg-white\/5.is-pressed { background-color: rgba(255, 255, 255, 0.15); }
 
         .pulse-radial-glow {
             position: absolute;
@@ -135,30 +138,28 @@
         }
 
         @media (max-height: 700px) {
-            header { padding-top: 1.5rem !important; margin-bottom: 0.5rem !important; }
-            .nav-container { margin-bottom: 1rem !important; margin-left: 1.5rem !important; margin-right: 1.5rem !important; }
-            #time-left { font-size: 4.5rem !important; }
-            #current-exercise { font-size: 1.5rem !important; }
-            .progress-svg-container { max-width: 260px !important; }
-            .media-controls { margin-top: 0.5rem !important; gap: 1rem !important; }
-            .exercise-label-container { height: 52px !important; }
-            #view-timer { gap: 1rem !important; }
+            body > div > header { padding-top: 1.5rem; margin-bottom: 0.5rem; }
+            body > div .nav-container { margin-bottom: 1rem; margin-left: 1.5rem; margin-right: 1.5rem; }
+            #time-left { font-size: 5rem; }
+            #current-exercise { font-size: 1.5rem; }
+            .progress-svg-container { max-width: 260px; }
+            .media-controls { margin-top: 0.5rem; gap: 1rem; }
+            #view-timer { gap: 1rem; }
         }
 
         @media (max-width: 400px) {
             .progress-svg-container { 
-                max-width: 340px !important; 
+                max-width: 340px; 
             }
             .exercise-label-container {
-                width: 220px !important;
+                width: 220px;
             }
             #current-exercise {
-                font-size: 1.5rem !important;
+                font-size: 1.5rem;
             }
         }
 
         .exercise-label-container {
-            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -199,7 +200,8 @@
             border-radius: 12px;
         }
         .exercise-row.placeholder {
-            opacity: 0 !important;
+            opacity: 0;
+            pointer-events: none;
         }
         
         .delete-btn {
@@ -275,6 +277,19 @@
             transition: opacity 0.2s ease;
         }
 
+        /* Screen-reader-only utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
         /* Slide-in animation when opening settings */
         #view-settings.active {
             animation: slideInFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
@@ -297,13 +312,13 @@
     <div class="max-w-md w-full h-full flex flex-col relative overflow-hidden">
         
         <header class="flex justify-between items-center px-4 md:px-8 pt-10 mb-3 flex-shrink-0">
-            <button id="btn-settings" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl text-white/70">
+            <button id="btn-settings" aria-label="Open settings" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl text-white/70">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             </button>
-            <button id="btn-mute" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl">
+            <button id="btn-mute" aria-label="Toggle mute" aria-pressed="false" class="ios-button flex items-center justify-center h-12 w-12 rounded-2xl apple-glass border-white/5 shadow-xl">
                 <svg id="icon-unmuted" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
@@ -315,21 +330,26 @@
 
         <div class="view-stack">
             <div id="view-timer" class="tab-view active pb-8 flex flex-col gap-6 justify-center h-full">
+                <!-- Screen reader live region for phase/exercise announcements -->
+                <div id="sr-announcement" aria-live="polite" aria-atomic="true" class="sr-only"></div>
                 <div class="relative w-full flex items-center justify-center px-4">
                     <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
                             <circle class="text-white/5" stroke-width="12" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
-                            <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="12" stroke-dasharray="930" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
+                            <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="12" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
                         </svg>
-                        <div class="relative z-10 flex flex-col items-center justify-center text-center select-none p-4 w-full">
-                            <div class="exercise-label-container">
-                                <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase text-3xl">Get Ready</span>
+                        <div class="relative z-10 flex flex-col items-center justify-center text-center select-none w-full h-full">
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="exercise-label-container translate-y-7">
+                                    <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase text-3xl">Get Ready</span>
+                                </div>
                             </div>
-                            <span id="time-left" class="text-[5rem] font-black tracking-tighter tabular-nums leading-none mt-1">00:00</span>
-                            <div class="mt-3 flex flex-col items-center min-h-[68px]">
-                                <span id="circuit-display" class="text-sm font-bold text-blue-500/50 uppercase tracking-[0.2em] tabular-nums"> </span>
-                                <span id="round-display" class="text-sm font-bold text-white/30 uppercase tracking-[0.2em] mt-1 tabular-nums">Ready</span>
-                                <span id="total-time-display" class="text-sm font-bold text-white/60 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums">Total: --:--</span>
+                            <!-- 00:00 is the true visual centre — no flex grow on siblings -->
+                            <span id="time-left" class="text-[6rem] font-black tracking-tighter tabular-nums leading-none flex-shrink-0">00:00</span>
+                            <!-- Sub-info floats below, pushed up from bottom -->
+                            <div class="flex-1 flex flex-col items-center pt-2">
+                                <span id="circuit-display" class="text-[12px] font-bold text-white/40 uppercase tracking-[0.12em] tabular-nums whitespace-nowrap"> </span>
+                                <span id="total-time-display" class="text-sm font-bold text-white/40 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums">--:--</span>
                                 <div id="total-progress-bar-container" class="w-28 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300">
                                     <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                                 </div>
@@ -346,27 +366,27 @@
                 </div>
 
                 <div class="media-controls w-full px-4 flex items-center justify-center gap-6 mt-2">
-                    <button id="btn-reset" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
+                    <button id="btn-reset" aria-label="Reset timer" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
                         <!-- Material Design: Replay -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
                         </svg>
                     </button>
                     <div class="relative h-24 w-24">
-                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
+                        <button id="btn-start" aria-label="Start workout" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
                             <!-- play triangle -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M8 5.14v14l11-7-11-7z"/>
                             </svg>
                         </button>
-                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
+                        <button id="btn-pause" aria-label="Pause workout" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
                             <!-- pause two bars -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
                             </svg>
                         </button>
                     </div>
-                    <button id="btn-skip" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
+                    <button id="btn-skip" aria-label="Skip to next phase" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
                         <!-- skip forward -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
@@ -573,12 +593,12 @@
                             <!-- Routine selector -->
                             <div class="p-4 space-y-3">
                                 <div class="relative" id="custom-routine-dropdown">
-                                    <button id="ac-ls-dropdown-select" class="w-full flex items-center justify-between bg-white/5 hover:bg-white/8 border border-white/10 rounded-xl pl-4 pr-3 py-3 text-sm font-medium text-white transition-colors outline-none">
+                                    <button id="ac-ls-dropdown-select" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="ac-ls-dropdown-options-list" class="w-full flex items-center justify-between bg-white/5 hover:bg-white/8 border border-white/10 rounded-xl pl-4 pr-3 py-3 text-sm font-medium text-white transition-colors outline-none">
                                         <span id="ac-ls-dropdown-title" class="truncate text-white/60">Select Routine</span>
                                         <svg class="w-3.5 h-3.5 text-white/30 ml-2 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                                     </button>
                                     <div id="ac-ls-dropdown-options" class="absolute left-0 right-0 top-full mt-1 bg-[#1a1a1c] border border-white/10 rounded-xl shadow-2xl overflow-hidden hidden z-50 max-h-60 overflow-y-auto">
-                                        <ul id="ac-ls-dropdown-options-list" class="py-1"></ul>
+                                        <ul id="ac-ls-dropdown-options-list" role="listbox" aria-label="Saved routines" class="py-1"></ul>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
@@ -627,6 +647,15 @@
 
     <script>
         // ============================================
+        // DEBUG FLAG — set to true to re-enable console output
+        // ============================================
+        const DEBUG = false;
+        const log  = (...a) => DEBUG && console.log(...a);
+        const warn = (...a) => DEBUG && console.warn(...a);
+        // Errors always surface (they indicate real failures)
+        const err  = (...a) => console.error(...a);
+
+        // ============================================
         // ICON CONSTANTS
         // Centralised SVG strings to avoid duplication across togglePause,
         // completeWorkout and resetTimer.
@@ -644,19 +673,19 @@
 
             async enable() {
                 if (!this.isSupported) {
-                    console.warn('Wake Lock API is not supported in this browser');
+                    warn('Wake Lock API is not supported in this browser');
                     return;
                 }
 
                 try {
                     this.wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('✓ Wake Lock enabled - screen will stay on');
+                    log('✓ Wake Lock enabled - screen will stay on');
                     
                     this.wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock was released');
+                        log('Wake Lock was released');
                     });
-                } catch (err) {
-                    console.error('Failed to enable Wake Lock:', err);
+                } catch (e) {
+                    err('Failed to enable Wake Lock:', e);
                 }
             }
 
@@ -665,9 +694,9 @@
                     try {
                         await this.wakeLock.release();
                         this.wakeLock = null;
-                        console.log('✓ Wake Lock disabled');
-                    } catch (err) {
-                        console.error('Error releasing Wake Lock:', err);
+                        log('✓ Wake Lock disabled');
+                    } catch (e) {
+                        err('Error releasing Wake Lock:', e);
                     }
                 }
             }
@@ -699,7 +728,7 @@
                     utterance.volume = 0;
                     window.speechSynthesis.speak(utterance);
                     this.isInitialized = true;
-                    console.log('✓ Speech synthesis initialized for iOS');
+                    log('✓ Speech synthesis initialized for iOS');
                 } else {
                     this.isInitialized = true;
                 }
@@ -725,7 +754,7 @@
                     }
                     
                     window.speechSynthesis.speak(utterance);
-                    console.log('🔊 Speaking:', text);
+                    log('🔊 Speaking:', text);
                 }, this.isIOS ? 100 : 0);
             }
 
@@ -762,9 +791,9 @@
                     src.buffer = buf;
                     src.connect(this.ctx.destination);
                     src.start(0);
-                    console.log('✓ Web Audio ready, state:', this.ctx.state);
+                    log('✓ Web Audio ready, state:', this.ctx.state);
                 } catch (e) {
-                    console.error('Audio unlock failed:', e);
+                    err('Audio unlock failed:', e);
                 }
             }
 
@@ -792,7 +821,7 @@
             // 80ms is enough to be reliable on both iOS and PC, but short enough to feel instant.
             _play(notes) {
                 if (!this.ctx) {
-                    console.warn('AudioContext not ready.');
+                    warn('AudioContext not ready.');
                     return;
                 }
                 if (this.ctx.state === 'suspended') {
@@ -911,31 +940,9 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-        
-        // Encapsulated State Class
-        class TimerState {
-            constructor() {
-                this.timer = null;
-                this.isPaused = false;
-                this.currentPhase = 'prepare';
-                this.globalIntervalIndex = 0;
-                this.secondsRemaining = 0;
-                this.totalPhaseSeconds = 0;
-                this.totalTimeRemaining = 0;
-                this.initialTotalTime = 0;
-                this.exerciseObjects = [];
-                this.phaseEndTime = 0;
-                this.pausedTimeRemainingMs = 0;
-                this.workoutEndTime = 0;
-                this.pauseStartTime = 0;
-            }
-        }
-
-        // Initialize global state container
-        const state = new TimerState();
 
         const timeLeftEl = document.getElementById('time-left');
-        const roundDisplayEl = document.getElementById('round-display');
+        const roundDisplayEl = null; // merged into circuitDisplayEl
         const circuitDisplayEl = document.getElementById('circuit-display');
         const totalTimeDisplayEl = document.getElementById('total-time-display');
         const exerciseTextEl = document.getElementById('current-exercise');
@@ -953,10 +960,7 @@
         const inputWork = document.getElementById('input-work'), inputRest = document.getElementById('input-rest'), inputRounds = document.getElementById('input-rounds'), inputPrepare = document.getElementById('input-prepare');
         
         // ============================================
-        // APP STATE (source of truth for all mutable app-level data)
-        // Centralises exercisesData, voiceEnabled, audioType, routine
-        // tracking and the timer state in one place, replacing the
-        // previous mix of module-level lets scattered across the file.
+        // APP STATE (single source of truth for all mutable app-level data)
         // ============================================
         const appState = {
             // Exercise list — the canonical data model
@@ -974,39 +978,28 @@
             // Saved routines
             savedRoutines: [],
             currentRoutineIndex: -1,
+            // Timer runtime — previously a separate `state` / TimerState instance
+            timer: {
+                raf: null,           // requestAnimationFrame handle (was: state.timer)
+                isPaused: false,
+                currentPhase: 'prepare',
+                globalIntervalIndex: 0,
+                secondsRemaining: 0,
+                totalPhaseSeconds: 0,
+                totalTimeRemaining: 0,
+                initialTotalTime: 0,
+                exerciseObjects: [],
+                phaseEndTime: 0,
+                pausedTimeRemainingMs: 0,
+                workoutEndTime: 0,
+                pauseStartTime: 0,
+            },
         };
 
-        // Convenience aliases so all existing code that reads/writes the
-        // old variable names continues to work without any other changes.
-        // Each alias is a getter/setter pair that delegates to appState,
-        // making the migration transparent to all call-sites.
-        Object.defineProperties(window, {
-            exercisesData: {
-                get() { return appState.exercises; },
-                set(v) { appState.exercises = v; },
-                configurable: true,
-            },
-            voiceEnabled: {
-                get() { return appState.voiceEnabled; },
-                set(v) { appState.voiceEnabled = v; },
-                configurable: true,
-            },
-            audioType: {
-                get() { return appState.audioType; },
-                set(v) { appState.audioType = v; },
-                configurable: true,
-            },
-            savedRoutines: {
-                get() { return appState.savedRoutines; },
-                set(v) { appState.savedRoutines = v; },
-                configurable: true,
-            },
-            currentRoutineIndex: {
-                get() { return appState.currentRoutineIndex; },
-                set(v) { appState.currentRoutineIndex = v; },
-                configurable: true,
-            },
-        });
+        // Convenience alias so existing code that references `state` keeps working
+        // without any other changes. This is a live reference — mutating `state.*`
+        // mutates `appState.timer.*` and vice-versa.
+        const state = appState.timer;
 
         // ============================================
         // ROUTINE MANAGER
@@ -1027,24 +1020,24 @@
                 const stored = localStorage.getItem('intervalTimerRoutines');
                 if (stored) {
                     try {
-                        savedRoutines = JSON.parse(stored);
+                        appState.savedRoutines = JSON.parse(stored);
                     } catch (e) {
-                        console.error('Error parsing routines', e);
-                        savedRoutines = [];
+                        err('Error parsing routines', e);
+                        appState.savedRoutines = [];
                     }
                 }
             } catch (e) {
-                console.warn('Could not load routines (storage unavailable):', e);
-                savedRoutines = [];
+                warn('Could not load routines (storage unavailable):', e);
+                appState.savedRoutines = [];
             }
             updateRoutineSelect();
         }
 
         function saveRoutines() {
             try {
-                saveRoutines();
+                localStorage.setItem('intervalTimerRoutines', JSON.stringify(appState.savedRoutines));
             } catch (e) {
-                console.warn('Could not save routines (storage unavailable):', e);
+                warn('Could not save routines (storage unavailable):', e);
             }
         }
 
@@ -1054,7 +1047,7 @@
             
             list.innerHTML = '';
             
-            if (savedRoutines.length === 0) {
+            if (appState.savedRoutines.length === 0) {
                  const li = document.createElement('li');
                  li.className = 'px-3 py-2 text-sm text-white/50 italic';
                  li.textContent = 'No saved routines';
@@ -1062,14 +1055,16 @@
                  return;
             }
 
-            savedRoutines.forEach((routine, index) => {
+            appState.savedRoutines.forEach((routine, index) => {
                 const li = document.createElement('li');
                 li.className = 'ac-ls-dropdown-option px-3 py-2 text-sm font-medium text-white hover:bg-[#2c2c2e] cursor-pointer flex items-center gap-2';
+                li.setAttribute('role', 'option');
+                li.setAttribute('aria-selected', index === appState.currentRoutineIndex ? 'true' : 'false');
                 li.onclick = () => {
                     loadRoutine(index);
                     toggleDropdown(false);
                 };
-                li.innerHTML = `<span class="w-3 h-3 flex items-center justify-center text-[#0071e3] ${index === currentRoutineIndex ? '' : 'opacity-0'} check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span>${escapeHtml(routine.name)}</span>`;
+                li.innerHTML = `<span class="w-3 h-3 flex items-center justify-center text-[#0071e3] ${index === appState.currentRoutineIndex ? '' : 'opacity-0'} check-icon"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span>${escapeHtml(routine.name)}</span>`;
                 list.appendChild(li);
             });
             updateRoutineButtonsState();
@@ -1087,28 +1082,28 @@
 
             const newRoutine = {
                 name: name,
-                exercises: JSON.parse(JSON.stringify(exercisesData)),
+                exercises: structuredClone(appState.exercises),
                 workTime: getSecondsFromTimeInput('input-work'),
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
                 coolDownTime: getSecondsFromTimeInput('input-cooldown'),
-                voiceEnabled: voiceEnabled,
-                audioType: audioType
+                voiceEnabled: appState.voiceEnabled,
+                audioType: appState.audioType
             };
 
-            savedRoutines.push(newRoutine);
+            appState.savedRoutines.push(newRoutine);
             saveRoutines();
             updateRoutineSelect();
             
             // Select the new routine
-            loadRoutine(savedRoutines.length - 1);
+            loadRoutine(appState.savedRoutines.length - 1);
         }
 
         async function updateRoutine() {
-            if (currentRoutineIndex === -1) return;
+            if (appState.currentRoutineIndex === -1) return;
             
-            const routine = savedRoutines[currentRoutineIndex];
+            const routine = appState.savedRoutines[appState.currentRoutineIndex];
             const confirmed = await showModal({
                 title: 'Update Routine',
                 message: `Update "${routine.name}" with current settings?`,
@@ -1120,17 +1115,17 @@
 
             const updatedRoutine = {
                 name: routine.name,
-                exercises: JSON.parse(JSON.stringify(exercisesData)),
+                exercises: structuredClone(appState.exercises),
                 workTime: getSecondsFromTimeInput('input-work'),
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
                 coolDownTime: getSecondsFromTimeInput('input-cooldown'),
-                voiceEnabled: voiceEnabled,
-                audioType: audioType
+                voiceEnabled: appState.voiceEnabled,
+                audioType: appState.audioType
             };
 
-            savedRoutines[currentRoutineIndex] = updatedRoutine;
+            appState.savedRoutines[appState.currentRoutineIndex] = updatedRoutine;
             saveRoutines();
             
             // Visual feedback
@@ -1141,7 +1136,7 @@
         }
 
         async function deleteRoutine() {
-            if (currentRoutineIndex === -1) {
+            if (appState.currentRoutineIndex === -1) {
                 await showModal({
                     title: 'No Routine Selected',
                     message: 'Please select a routine to delete.',
@@ -1154,23 +1149,23 @@
             
             const confirmed = await showModal({
                 title: 'Delete Routine',
-                message: `Delete "${savedRoutines[currentRoutineIndex].name}"?`,
+                message: `Delete "${appState.savedRoutines[appState.currentRoutineIndex].name}"?`,
                 confirmText: 'Delete',
                 confirmColor: 'bg-red-500'
             });
             
             if (!confirmed) return;
 
-            savedRoutines.splice(currentRoutineIndex, 1);
+            appState.savedRoutines.splice(appState.currentRoutineIndex, 1);
             saveRoutines();
-            currentRoutineIndex = -1;
+            appState.currentRoutineIndex = -1;
             document.getElementById('ac-ls-dropdown-title').textContent = "Select Routine";
             updateRoutineSelect();
             saveSettings();
         }
 
         async function renameRoutine() {
-            if (currentRoutineIndex === -1) {
+            if (appState.currentRoutineIndex === -1) {
                 await showModal({
                     title: 'No Routine Selected',
                     message: 'Please select a routine to rename.',
@@ -1181,7 +1176,7 @@
                 return;
             }
 
-            const routine = savedRoutines[currentRoutineIndex];
+            const routine = appState.savedRoutines[appState.currentRoutineIndex];
             const newName = await showModal({
                 title: 'Rename Routine',
                 showInput: true,
@@ -1192,14 +1187,14 @@
 
             if (!newName || newName.trim() === '' || newName.trim() === routine.name) return;
 
-            savedRoutines[currentRoutineIndex].name = newName.trim();
+            appState.savedRoutines[appState.currentRoutineIndex].name = newName.trim();
             saveRoutines();
             document.getElementById('ac-ls-dropdown-title').textContent = newName.trim();
             updateRoutineSelect();
         }
 
         function exportRoutines() {
-            if (savedRoutines.length === 0) {
+            if (appState.savedRoutines.length === 0) {
                 showModal({
                     title: 'No Routines',
                     message: 'You have no saved routines to export.',
@@ -1208,7 +1203,7 @@
                 });
                 return;
             }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedRoutines, null, 2));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState.savedRoutines, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "interval_timer_routines.json");
@@ -1280,7 +1275,7 @@
                     });
 
                     if (confirmed) {
-                        savedRoutines = [...savedRoutines, ...validRoutines];
+                        appState.savedRoutines = [...appState.savedRoutines, ...validRoutines];
                         saveRoutines();
                         updateRoutineSelect();
                         await showModal({
@@ -1290,11 +1285,11 @@
                             cancelText: null
                         });
                     }
-                } catch (err) {
-                    console.error(err);
+                } catch (e) {
+                    err(e);
                     await showModal({
                         title: 'Import Failed',
-                        message: err.message || 'An error occurred while processing the file.',
+                        message: e.message || 'An error occurred while processing the file.',
                         confirmText: 'OK',
                         cancelText: null
                     });
@@ -1309,15 +1304,15 @@
                 return;
             }
             
-            const routine = savedRoutines[index];
+            const routine = appState.savedRoutines[index];
             if (!routine) return;
             
-            currentRoutineIndex = parseInt(index);
+            appState.currentRoutineIndex = parseInt(index);
             document.getElementById('ac-ls-dropdown-title').textContent = routine.name;
             updateRoutineSelect();
             
             // Apply settings
-            exercisesData = JSON.parse(JSON.stringify(routine.exercises)); // Deep copy
+            appState.exercises = structuredClone(routine.exercises); // Deep copy
             setTimeInputSeconds('input-work', routine.workTime);
             setTimeInputSeconds('input-rest', routine.restTime);
             setTimeInputSeconds('input-prepare', routine.prepTime);
@@ -1325,8 +1320,8 @@
             inputRounds.value = routine.circuits;
             
             if (routine.voiceEnabled !== undefined) {
-                voiceEnabled = routine.voiceEnabled;
-                handleMuteToggle(voiceEnabled);
+                appState.voiceEnabled = routine.voiceEnabled;
+                handleMuteToggle(appState.voiceEnabled);
             }
             
             if (routine.audioType) {
@@ -1343,7 +1338,7 @@
         function updateRoutineButtonsState() {
             const updateBtn = document.getElementById('btn-update-routine');
             const renameBtn = document.getElementById('btn-rename-routine');
-            const shouldBeEnabled = currentRoutineIndex !== -1;
+            const shouldBeEnabled = appState.currentRoutineIndex !== -1;
 
             [updateBtn, renameBtn].forEach(btn => {
                 if (!btn) return;
@@ -1452,20 +1447,20 @@
 
         function saveSettings() {
             const settings = {
-                exercises: exercisesData,
+                exercises: appState.exercises,
                 workTime: getSecondsFromTimeInput('input-work'),
                 restTime: getSecondsFromTimeInput('input-rest'),
                 circuits: inputRounds.value,
                 prepTime: getSecondsFromTimeInput('input-prepare'),
                 coolDownTime: getSecondsFromTimeInput('input-cooldown'),
-                voiceEnabled: voiceEnabled,
-                audioType: audioType,
-                routineIndex: currentRoutineIndex
+                voiceEnabled: appState.voiceEnabled,
+                audioType: appState.audioType,
+                routineIndex: appState.currentRoutineIndex
             };
             try {
                 localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
             } catch (e) {
-                console.warn('Could not save settings (storage unavailable):', e);
+                warn('Could not save settings (storage unavailable):', e);
             }
         }
 
@@ -1474,7 +1469,7 @@
             try {
                 saved = localStorage.getItem('intervalTimerSettings');
             } catch (e) {
-                console.warn('Could not load settings (storage unavailable):', e);
+                warn('Could not load settings (storage unavailable):', e);
             }
             if (saved) {
                 try {
@@ -1483,12 +1478,12 @@
                     // Handle legacy string format or new array format
                     if (settings.exercises) {
                         if (typeof settings.exercises === 'string') {
-                            exercisesData = settings.exercises.split(',').filter(i => i.trim() !== "").map(item => {
+                            appState.exercises = settings.exercises.split(',').filter(i => i.trim() !== "").map(item => {
                                 const parts = item.split(':');
                                 return { name: parts[0].trim(), duration: (parts[1] && !isNaN(parseInt(parts[1].trim()))) ? parseInt(parts[1].trim()) : null };
                             });
                         } else if (Array.isArray(settings.exercises)) {
-                            exercisesData = settings.exercises;
+                            appState.exercises = settings.exercises;
                         }
                     }
                     
@@ -1507,19 +1502,19 @@
                     }
                     
                     inputRounds.value = Math.max(1, parseInt(settings.circuits) || 1);
-                    voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
-                    handleMuteToggle(voiceEnabled);
+                    appState.voiceEnabled = settings.voiceEnabled !== undefined ? settings.voiceEnabled : true;
+                    handleMuteToggle(appState.voiceEnabled);
                     
                     // Load audio type
-                    audioType = settings.audioType || 'voice';
+                    appState.audioType = settings.audioType || 'voice';
                     
                     // Load selected routine index
                     if (settings.routineIndex !== undefined) {
-                        if (settings.routineIndex !== -1 && savedRoutines[settings.routineIndex]) {
-                            currentRoutineIndex = settings.routineIndex;
-                            document.getElementById('ac-ls-dropdown-title').textContent = savedRoutines[currentRoutineIndex].name;
+                        if (settings.routineIndex !== -1 && appState.savedRoutines[settings.routineIndex]) {
+                            appState.currentRoutineIndex = settings.routineIndex;
+                            document.getElementById('ac-ls-dropdown-title').textContent = appState.savedRoutines[appState.currentRoutineIndex].name;
                         } else {
-                            currentRoutineIndex = -1;
+                            appState.currentRoutineIndex = -1;
                         }
                         updateRoutineButtonsState();
                     }
@@ -1527,13 +1522,13 @@
                     updateAudioTypeUI();
                     renderExerciseList();
                 } catch (e) {
-                    console.error('Error loading settings:', e);
+                    err('Error loading settings:', e);
                 }
             }
         }
         
         function setAudioType(type) {
-            audioType = type;
+            appState.audioType = type;
             updateAudioTypeUI();
             saveSettings();
         }
@@ -1545,7 +1540,7 @@
             const beepBtn    = document.getElementById('btn-audio-beep');
             if (!voiceCheck || !beepCheck) return;
 
-            if (audioType === 'voice') {
+            if (appState.audioType === 'voice') {
                 voiceCheck.classList.remove('hidden');
                 beepCheck.classList.add('hidden');
                 voiceBtn.style.backgroundColor = 'rgba(255,255,255,0.06)';
@@ -1613,15 +1608,15 @@
             if (!container) return;
             container.innerHTML = '';
             
-            exercisesData.forEach(item => {
+            appState.exercises.forEach(item => {
                 createExerciseRow(item.name, item.duration || '');
             });
             
             // Show/hide empty state
             const emptyState = document.getElementById('exercises-empty-state');
-            if (emptyState) emptyState.classList.toggle('hidden', exercisesData.length > 0);
+            if (emptyState) emptyState.classList.toggle('hidden', appState.exercises.length > 0);
 
-            if (exercisesData.length === 0) createExerciseRow('', '');
+            if (appState.exercises.length === 0) createExerciseRow('', '');
         }
 
         function createExerciseRow(name = '', duration = '') {
@@ -1945,7 +1940,7 @@
                 newExercises.push({ name: name, duration: durationVal ? parseTimeInput(durationVal) : null });
             });
             
-            exercisesData = newExercises;
+            appState.exercises = newExercises;
             
             // Show/hide empty state
             const emptyState = document.getElementById('exercises-empty-state');
@@ -2131,23 +2126,27 @@
             } else {
                 timerView.classList.remove('active');
                 settingsView.classList.add('active');
-                if (state.timer && !state.isPaused) togglePause();
+                if (state.raf && !state.isPaused) togglePause();
             }
         }
 
         function toggleMute() { 
-            voiceEnabled = !voiceEnabled; 
-            handleMuteToggle(voiceEnabled);
+            appState.voiceEnabled = !appState.voiceEnabled; 
+            handleMuteToggle(appState.voiceEnabled);
             saveSettings();
         }
         
         function handleMuteToggle(isUnmuted) {
             if (isUnmuted) { 
-                btnMute.classList.remove('is-muted'); 
+                btnMute.classList.remove('is-muted');
+                btnMute.setAttribute('aria-pressed', 'false');
+                btnMute.setAttribute('aria-label', 'Mute audio');
                 iconMuted.classList.add('hidden'); 
                 iconUnmuted.classList.remove('hidden'); 
             } else { 
-                btnMute.classList.add('is-muted'); 
+                btnMute.classList.add('is-muted');
+                btnMute.setAttribute('aria-pressed', 'true');
+                btnMute.setAttribute('aria-label', 'Unmute audio');
                 iconMuted.classList.remove('hidden'); 
                 iconUnmuted.classList.add('hidden'); 
                 speechManager.cancel();
@@ -2157,15 +2156,15 @@
         // speak() is ONLY for voice TTS. Beep sounds are triggered directly
         // via beep() at each phase transition and countdown tick.
         function speak(text) {
-            if (!voiceEnabled) return;
-            if (audioType === 'beep') return;
-            speechManager.speak(text, voiceEnabled);
+            if (!appState.voiceEnabled) return;
+            if (appState.audioType === 'beep') return;
+            speechManager.speak(text, appState.voiceEnabled);
         }
 
         // beep() is ONLY for beep mode. Called directly at phase transitions and countdown.
         function beep(type) {
-            if (!voiceEnabled) return;
-            if (audioType !== 'beep') return;
+            if (!appState.voiceEnabled) return;
+            if (appState.audioType !== 'beep') return;
             switch (type) {
                 case 'prepare':   soundManager.playPrepare();   break;
                 case 'work':      soundManager.playWorkStart(); break;
@@ -2197,7 +2196,7 @@
         function formatTime(seconds) { seconds = Math.max(0, Math.floor(seconds)); return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
         function parseExercises() { 
             const defaultWork = getSecondsFromTimeInput('input-work'); 
-            return exercisesData.map((item, index) => { 
+            return appState.exercises.map((item, index) => { 
                 return { 
                     name: item.name || `Exercise ${index + 1}`, 
                     duration: item.duration || defaultWork 
@@ -2206,7 +2205,7 @@
         }
         
         function calculateTotalTime() {
-            if (exercisesData.length === 0) return 0;
+            if (appState.exercises.length === 0) return 0;
             
             const circuits = parseInt(inputRounds.value);
             const restTime = getSecondsFromTimeInput('input-rest');
@@ -2215,11 +2214,11 @@
             const defaultWork = getSecondsFromTimeInput('input-work');
             
             let totalWorkTime = 0;
-            exercisesData.forEach(ex => {
+            appState.exercises.forEach(ex => {
                 totalWorkTime += (ex.duration !== null ? ex.duration : defaultWork);
             });
             
-            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (exercisesData.length * circuits - 1)) + coolDownTime;
+            const totalTime = prepTime + (totalWorkTime * circuits) + (restTime * (appState.exercises.length * circuits - 1)) + coolDownTime;
             
             return totalTime;
         }
@@ -2242,12 +2241,12 @@
             // If a specific time is provided (during workout), use it. 
             // Otherwise calculate from settings (during setup).
             const totalSeconds = secondsOverride !== null ? secondsOverride : calculateTotalTime();
-            
+
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            totalTimeDisplayEl.innerText = `Total: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Hide total time if 0 and not currently running a workout (setup mode)
+            totalTimeDisplayEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Show/hide when no time configured
             if (secondsOverride === null && totalSeconds === 0) {
                 totalTimeDisplayEl.classList.add('opacity-0');
                 if (totalProgressBarContainer) totalProgressBarContainer.classList.add('opacity-0');
@@ -2258,26 +2257,24 @@
 
             // Update Total Progress Bar only when timer is NOT running.
             // When timer is running, it's handled by updateProgressBarOnly on each frame.
-            if (!state.timer && !state.isPaused) { updateProgressBar(totalSeconds, false); }
+            if (!state.raf && !state.isPaused) { updateProgressBar(totalSeconds, false); }
         }
         
         function updateCountsDisplay() {
             const totalCircuits = parseInt(inputRounds.value) || 1;
-            const count = exercisesData.length || 0;
+            const count = appState.exercises.length || 0;
             
             // Always show the counts based on current settings
             if (count > 0) {
-                roundDisplayEl.innerText = `Exercise 1 / ${count}`;
-                circuitDisplayEl.innerText = `Circuit 1 / ${totalCircuits}`;
+                circuitDisplayEl.innerText = `Circuit 1 / ${totalCircuits} · Exercise 1 / ${count}`;
             } else {
-                roundDisplayEl.innerText = 'Add Exercises';
-                circuitDisplayEl.innerText = ' ';
+                circuitDisplayEl.innerText = 'Add Exercises';
             }
             
             // Show first exercise as "Next" when stopped
-            if (!state.timer && !state.isPaused) {
+            if (!state.raf && !state.isPaused) {
                 if (count > 0) {
-                    nextExerciseNameEl.innerText = exercisesData[0].name || "Exercise 1";
+                    nextExerciseNameEl.innerText = appState.exercises[0].name || "Exercise 1";
                     nextUpContainer.classList.remove('opacity-0');
                     nextUpContainer.classList.add('opacity-100');
                 } else {
@@ -2324,13 +2321,18 @@
                 totalProgressBar.classList.add(style.bar, style.shadow);
             }
 
+            const srAnnounce = (msg) => {
+                const el = document.getElementById('sr-announcement');
+                if (el) { el.textContent = ''; requestAnimationFrame(() => { el.textContent = msg; }); }
+            };
+
             if (phase === 'prepare') {
                 exerciseTextEl.innerText = "Get Ready";
                 const info = getIntervalData(0);
-                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
-                circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
+                circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value} · Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                srAnnounce(`Get ready. First exercise: ${info.exercise.name}.`);
                 beep('prepare');
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
@@ -2338,20 +2340,21 @@
                 const info = getIntervalData(state.globalIntervalIndex + 1);
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                srAnnounce(`Rest. Next: ${info.exercise.name}.`);
                 beep('rest');
                 speak(`Rest. Next is ${info.exercise.name}.`);
             } else if (phase === 'cooldown') {
                 exerciseTextEl.innerText = "Cool Down";
-                roundDisplayEl.innerText = "Cool Down";
+                // circuit/exercise display intentionally left unchanged during cool down
                 nextExerciseNameEl.innerText = "Complete";
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
+                srAnnounce("Cool Down");
                 beep('cooldown');
                 speak("Cool Down");
             } else {
                 const info = getIntervalData(state.globalIntervalIndex);
                 exerciseTextEl.innerText = info.exercise.name;
-                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
-                circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
+                circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value} · Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 
                 if (!info.isLastOverall) {
                     const restTime = getSecondsFromTimeInput('input-rest');
@@ -2367,6 +2370,7 @@
                 } else {
                     nextUpContainer.classList.replace('opacity-100', 'opacity-0');
                 }
+                srAnnounce(`${info.exercise.name}. Exercise ${info.exerciseNum} of ${state.exerciseObjects.length}.`);
                 beep('work');
                 speak(info.exercise.name + ". Begin.");
             }
@@ -2377,13 +2381,13 @@
         function runTimerLoop() {
             if (state.isPaused) return;
             
-            state.timer = requestAnimationFrame(runTimerLoop);
+            state.raf = requestAnimationFrame(runTimerLoop);
             
             const now = Date.now();
             const timeLeftMs = state.phaseEndTime - now;
             
             if (timeLeftMs <= 0) {
-                cancelAnimationFrame(state.timer);
+                cancelAnimationFrame(state.raf);
                 nextPhase();
                 return;
             }
@@ -2414,9 +2418,9 @@
         }
 
         function nextPhase(isManualSkip = false) {
-            if (!state.timer) return;
+            if (!state.raf) return;
             // Cancel current loop frame to prevent double-fire
-            cancelAnimationFrame(state.timer);
+            cancelAnimationFrame(state.raf);
             
             // If this is a natural transition (not a manual skip), the last second just ended.
             // We need to decrement the total time to account for it before starting the next phase.
@@ -2525,17 +2529,17 @@
             btnPause.classList.remove('hidden');
             
             // Start timer AFTER displaying initial state
-            if (state.timer) cancelAnimationFrame(state.timer);
+            if (state.raf) cancelAnimationFrame(state.raf);
             runTimerLoop();
             switchTab('timer');
         }
 
         async function togglePause() { 
-            if (!state.timer && !state.isPaused) return; 
+            if (!state.raf && !state.isPaused) return; 
             state.isPaused = !state.isPaused; 
             
             if (state.isPaused) {
-                cancelAnimationFrame(state.timer);
+                cancelAnimationFrame(state.raf);
                 // Calculate exact remaining time to preserve precision
                 state.pausedTimeRemainingMs = state.phaseEndTime - Date.now();
                 state.pauseStartTime = Date.now();
@@ -2560,12 +2564,13 @@
         }
         
         async function completeWorkout() { 
-            if (state.timer) cancelAnimationFrame(state.timer);
-            state.timer = null; 
+            if (state.raf) cancelAnimationFrame(state.raf);
+            state.raf = null; 
             
             await wakeLockManager.disable();
 
-            // Set final time to 00:00
+            // Set final time to 00:00 on both the phase timer and total timer
+            timeLeftEl.innerText = formatTime(0);
             state.totalTimeRemaining = 0;
             updateTotalTimeDisplay(state.totalTimeRemaining);
             
@@ -2621,12 +2626,12 @@
         // SOFT RESET FUNCTION (No Page Reload)
         // ============================================
         async function resetTimer() {
-            console.log('🔄 Soft reset initiated');
+            log('🔄 Soft reset initiated');
             
             // Stop and clear timer
-            if (state.timer) {
-                cancelAnimationFrame(state.timer);
-                state.timer = null;
+            if (state.raf) {
+                cancelAnimationFrame(state.raf);
+                state.raf = null;
             }
             
             // Cleanup resources
@@ -2677,7 +2682,7 @@
             // Switch to timer tab
             switchTab('timer');
             
-            console.log('✓ Reset complete');
+            log('✓ Reset complete');
         }
 
         // ============================================
@@ -2695,7 +2700,7 @@
             document.getElementById('btn-start').addEventListener('click', async () => {
                 speechManager.initialize();
                 await soundManager.unlock();
-                if (state.timer && state.isPaused) {
+                if (state.raf && state.isPaused) {
                     togglePause();
                 } else {
                     startWorkout();
@@ -2790,9 +2795,9 @@
 
             // --- Page visibility ---
             document.addEventListener('visibilitychange', () => {
-                if (!state.timer || state.isPaused) return;
+                if (!state.raf || state.isPaused) return;
                 if (document.hidden) {
-                    cancelAnimationFrame(state.timer);
+                    cancelAnimationFrame(state.raf);
                     state.pausedTimeRemainingMs = Math.max(0, state.phaseEndTime - Date.now());
                     state.pauseStartTime = Date.now();
                 } else {
@@ -2812,7 +2817,7 @@
                 switch (e.code) {
                     case 'Space':
                         e.preventDefault();
-                        if (state.timer || state.isPaused) {
+                        if (state.raf || state.isPaused) {
                             togglePause();
                         } else {
                             speechManager.initialize();
@@ -2821,7 +2826,7 @@
                         break;
                     case 'KeyR': resetTimer(); break;
                     case 'KeyM': toggleMute(); break;
-                    case 'ArrowRight': if (state.timer && !state.isPaused) nextPhase(true); break;
+                    case 'ArrowRight': if (state.raf && !state.isPaused) nextPhase(true); break;
                 }
             });
 
@@ -2865,18 +2870,19 @@
             });
         }
 
+        // The script is at the end of <body>, so the DOM is fully parsed by the time
+        // this code runs. DOMContentLoaded has already fired at this point, so an
+        // addEventListener for it would never trigger. Call init directly instead.
         progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
-        window.onload = () => {
-            loadRoutines();
-            loadSettings();
-            renderExerciseList();
-            setupAutoSave();
-            setupEventListeners();
-            updateAllIntervalRowDims();
-            timeLeftEl.innerText = formatTime(0);
-            updateTotalTimeDisplay();
-            updateCountsDisplay();
-        };
+        loadRoutines();
+        loadSettings();
+        renderExerciseList();
+        setupAutoSave();
+        setupEventListeners();
+        updateAllIntervalRowDims();
+        timeLeftEl.innerText = formatTime(0);
+        updateTotalTimeDisplay();
+        updateCountsDisplay();
     </script>
 </body>
 </html>
