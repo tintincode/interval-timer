@@ -627,6 +627,13 @@
 
     <script>
         // ============================================
+        // ICON CONSTANTS
+        // Centralised SVG strings to avoid duplication across togglePause,
+        // completeWorkout and resetTimer.
+        // ============================================
+        const PLAY_ICON_HTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
+
+        // ============================================
         // WAKE LOCK MANAGER
         // ============================================
         class WakeLockManager {
@@ -945,25 +952,65 @@
         const nextExerciseNameEl = document.getElementById('next-exercise-name');
         const inputWork = document.getElementById('input-work'), inputRest = document.getElementById('input-rest'), inputRounds = document.getElementById('input-rounds'), inputPrepare = document.getElementById('input-prepare');
         
-        // Native Data Model (Source of Truth)
-        let exercisesData = [
-            { name: "Jumping jacks", duration: null },
-            { name: "Push ups", duration: 30 },
-            { name: "Crunches", duration: null },
-            { name: "Walk outs", duration: null },
-            { name: "Squats", duration: null },
-            { name: "Mountain climbers", duration: null }
-        ];
-        
-        // Voice state variable (controlled by mute button)
-        let voiceEnabled = true;
-        let audioType = 'voice'; // 'voice' or 'beep'
-        
+        // ============================================
+        // APP STATE (source of truth for all mutable app-level data)
+        // Centralises exercisesData, voiceEnabled, audioType, routine
+        // tracking and the timer state in one place, replacing the
+        // previous mix of module-level lets scattered across the file.
+        // ============================================
+        const appState = {
+            // Exercise list — the canonical data model
+            exercises: [
+                { name: "Jumping jacks", duration: null },
+                { name: "Push ups", duration: 30 },
+                { name: "Crunches", duration: null },
+                { name: "Walk outs", duration: null },
+                { name: "Squats", duration: null },
+                { name: "Mountain climbers", duration: null }
+            ],
+            // Audio
+            voiceEnabled: true,
+            audioType: 'voice',   // 'voice' | 'beep'
+            // Saved routines
+            savedRoutines: [],
+            currentRoutineIndex: -1,
+        };
+
+        // Convenience aliases so all existing code that reads/writes the
+        // old variable names continues to work without any other changes.
+        // Each alias is a getter/setter pair that delegates to appState,
+        // making the migration transparent to all call-sites.
+        Object.defineProperties(window, {
+            exercisesData: {
+                get() { return appState.exercises; },
+                set(v) { appState.exercises = v; },
+                configurable: true,
+            },
+            voiceEnabled: {
+                get() { return appState.voiceEnabled; },
+                set(v) { appState.voiceEnabled = v; },
+                configurable: true,
+            },
+            audioType: {
+                get() { return appState.audioType; },
+                set(v) { appState.audioType = v; },
+                configurable: true,
+            },
+            savedRoutines: {
+                get() { return appState.savedRoutines; },
+                set(v) { appState.savedRoutines = v; },
+                configurable: true,
+            },
+            currentRoutineIndex: {
+                get() { return appState.currentRoutineIndex; },
+                set(v) { appState.currentRoutineIndex = v; },
+                configurable: true,
+            },
+        });
+
         // ============================================
         // ROUTINE MANAGER
         // ============================================
-        let savedRoutines = [];
-        let currentRoutineIndex = -1;
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -1586,17 +1633,32 @@
             
             // Add transition classes for entry animation
             div.className = 'exercise-row relative overflow-hidden rounded-xl transition-all duration-300 ease-out opacity-0 translate-y-2 max-h-0 select-none';
-            div.innerHTML = `
-                <div class="row-content w-full flex items-center bg-white/5 py-3 px-4">
-                    <input type="text" value="${name}" placeholder="Exercise Name" class="exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white">
-                    
-                    <input type="text" value="${formattedDuration}" placeholder="--:--" class="exercise-duration-input w-16 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-bold mx-3">
 
-                    <button class="delete-btn ios-button w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-            `;
+            // ── Build DOM safely (no innerHTML with user data → no XSS) ──
+            const rowContent = document.createElement('div');
+            rowContent.className = 'row-content w-full flex items-center bg-white/5 py-3 px-4';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = name;                          // safe — DOM property, not HTML
+            nameInput.placeholder = 'Exercise Name';
+            nameInput.className = 'exercise-name-input flex-1 min-w-0 bg-transparent border-none p-0 text-sm font-medium focus:ring-0 outline-none placeholder:text-white/20 text-white';
+
+            const durInput = document.createElement('input');
+            durInput.type = 'text';
+            durInput.value = formattedDuration;              // safe — DOM property
+            durInput.placeholder = '--:--';
+            durInput.className = 'exercise-duration-input w-16 bg-transparent border-none p-0 text-sm text-right focus:ring-0 outline-none placeholder:text-white/20 text-white tabular-nums font-bold mx-3';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn ios-button w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all ml-1';
+            // The delete icon is static markup — no user data, safe to use innerHTML here
+            deleteBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+            rowContent.appendChild(nameInput);
+            rowContent.appendChild(durInput);
+            rowContent.appendChild(deleteBtn);
+            div.appendChild(rowContent);
             container.appendChild(div);
             
             // Wire delete button
@@ -1993,11 +2055,11 @@
             }, 420);
         }
 
-        function startTimeIncrement(inputId, event) {
+        function startTimeIncrement(inputId) {
             startAdjustment(() => incrementTimeValue(inputId));
         }
 
-        function startTimeDecrement(inputId, event) {
+        function startTimeDecrement(inputId) {
             startAdjustment(() => decrementTimeValue(inputId));
         }
 
@@ -2416,8 +2478,21 @@
         async function startWorkout() {
             state.exerciseObjects = parseExercises();
             if (state.exerciseObjects.length === 0) {
-                // If no exercises, add one so the user can start
-                addNewExerciseRow();
+                // No exercises — guide the user to Settings to add some
+                switchTab('settings');
+                // Briefly highlight the exercises section via the toast
+                const box = document.getElementById('message-box');
+                if (box) {
+                    box.textContent = 'Add at least one exercise first';
+                    box.style.opacity = '1';
+                    clearTimeout(box._hideTimer);
+                    box._hideTimer = setTimeout(() => { box.style.opacity = '0'; }, 2500);
+                }
+                // Scroll the exercises list into view so the user sees exactly where to act
+                setTimeout(() => {
+                    const exercisesList = document.getElementById('exercises-list');
+                    if (exercisesList) exercisesList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 120);
                 return;
             }
             
@@ -2467,7 +2542,7 @@
                 
                 await wakeLockManager.disable();
                 speechManager.cancel();
-                btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
+                btnStart.innerHTML = PLAY_ICON_HTML;
             } else {
                 // Resume using exact stored time
                 state.phaseEndTime = Date.now() + state.pausedTimeRemainingMs;
@@ -2535,7 +2610,7 @@
             totalProgressBar.style.width = '100%';
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
-            btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
+            btnStart.innerHTML = PLAY_ICON_HTML;
             btnStart.classList.remove('hidden'); 
             btnPause.classList.add('hidden'); 
             beep('complete');
@@ -2582,7 +2657,7 @@
             updateTotalTimeDisplay(); // Instant update for reset
             
             // Reset buttons
-            btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
+            btnStart.innerHTML = PLAY_ICON_HTML;
             btnStart.classList.remove('hidden');
             btnPause.classList.add('hidden');
             
