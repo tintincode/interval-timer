@@ -381,19 +381,31 @@
                 </div>
 
                 <div class="media-controls w-full px-4 flex items-center justify-center gap-6 mt-2">
-                    <button id="btn-reset" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
-                        Reset
+                    <button id="btn-reset" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
+                        <!-- Material Design: Replay -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                        </svg>
                     </button>
                     <div class="relative h-24 w-24">
-                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-lg uppercase tracking-wide">
-                            Start
+                        <button id="btn-start" class="ios-button absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
+                            <!-- play triangle -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5.14v14l11-7-11-7z"/>
+                            </svg>
                         </button>
-                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl font-bold text-sm uppercase tracking-wide">
-                            Pause
+                        <button id="btn-pause" class="ios-button hidden absolute inset-0 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
+                            <!-- pause two bars -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
                         </button>
                     </div>
-                    <button id="btn-skip" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md font-semibold text-xs uppercase tracking-wider transition-all">
-                        Skip
+                    <button id="btn-skip" class="ios-button h-20 w-20 bg-white/5 text-white/70 rounded-full flex items-center justify-center border border-white/15 backdrop-blur-md transition-all">
+                        <!-- skip forward -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -2316,7 +2328,7 @@
                 
                 await wakeLockManager.disable();
                 speechManager.cancel();
-                btnStart.innerText = "Resume";
+                btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
             } else {
                 // Resume using exact stored time
                 phaseEndTime = Date.now() + pausedTimeRemainingMs;
@@ -2381,7 +2393,7 @@
             totalProgressBar.style.width = '100%';
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
-            btnStart.innerText = "Start";
+            btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
             btnStart.classList.remove('hidden'); 
             btnPause.classList.add('hidden'); 
             beep('complete');
@@ -2427,7 +2439,7 @@
             updateTotalTimeDisplay(); // Instant update for reset
             
             // Reset buttons
-            btnStart.innerText = "Start";
+            btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
             btnStart.classList.remove('hidden');
             btnPause.classList.add('hidden');
             
