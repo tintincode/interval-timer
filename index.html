@@ -879,7 +879,28 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-        let timer = null, isPaused = false, currentPhase = 'prepare', globalIntervalIndex = 0, secondsRemaining = 0, totalPhaseSeconds = 0, totalTimeRemaining = 0, initialTotalTime = 0, exerciseObjects = [], phaseEndTime = 0, pausedTimeRemainingMs = 0, workoutEndTime = 0, pauseStartTime = 0;
+        
+        // Encapsulated State Class
+        class TimerState {
+            constructor() {
+                this.timer = null;
+                this.isPaused = false;
+                this.currentPhase = 'prepare';
+                this.globalIntervalIndex = 0;
+                this.secondsRemaining = 0;
+                this.totalPhaseSeconds = 0;
+                this.totalTimeRemaining = 0;
+                this.initialTotalTime = 0;
+                this.exerciseObjects = [];
+                this.phaseEndTime = 0;
+                this.pausedTimeRemainingMs = 0;
+                this.workoutEndTime = 0;
+                this.pauseStartTime = 0;
+            }
+        }
+
+        // Initialize global state container
+        const state = new TimerState();
 
         const timeLeftEl = document.getElementById('time-left');
         const roundDisplayEl = document.getElementById('round-display');
@@ -1940,7 +1961,7 @@
             } else {
                 timerView.classList.remove('active');
                 settingsView.classList.add('active');
-                if (timer && !isPaused) togglePause();
+                if (state.timer && !state.isPaused) togglePause();
             }
         }
 
@@ -2039,7 +2060,7 @@
             let progress;
             if (isRunning) {
                 // Smoothly update based on precise time remaining
-                progress = (initialTotalTime > 0) ? (time / initialTotalTime) * 100 : 0;
+                progress = (state.initialTotalTime > 0) ? (time / state.initialTotalTime) * 100 : 0;
             } else {
                 // Set static state: 100% if a workout is configured, 0% otherwise
                 progress = (time > 0) ? 100 : 0;
@@ -2067,7 +2088,7 @@
 
             // Update Total Progress Bar only when timer is NOT running.
             // When timer is running, it's handled by updateProgressBarOnly on each frame.
-            if (!timer && !isPaused) { updateProgressBar(totalSeconds, false); }
+            if (!state.timer && !state.isPaused) { updateProgressBar(totalSeconds, false); }
         }
         
         function updateCountsDisplay() {
@@ -2085,7 +2106,7 @@
             }
             
             // Show first exercise as "Next" when stopped
-            if (!timer && !isPaused) {
+            if (!state.timer && !state.isPaused) {
                 if (count > 0) {
                     nextExerciseNameEl.innerText = exercises[0].name;
                     nextUpContainer.classList.remove('opacity-0');
@@ -2098,10 +2119,10 @@
         }
         
         function getIntervalData(index) { 
-            const listSize = exerciseObjects.length; 
+            const listSize = state.exerciseObjects.length; 
             if (listSize === 0) return null; 
             return { 
-                exercise: exerciseObjects[index % listSize], 
+                exercise: state.exerciseObjects[index % listSize], 
                 exerciseNum: (index % listSize) + 1, 
                 circuitNum: Math.floor(index / listSize) + 1, 
                 isLastOverall: (index === (listSize * parseInt(inputRounds.value)) - 1) 
@@ -2137,7 +2158,7 @@
             if (phase === 'prepare') {
                 exerciseTextEl.innerText = "Get Ready";
                 const info = getIntervalData(0);
-                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${exerciseObjects.length}`;
+                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
@@ -2145,7 +2166,7 @@
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
                 exerciseTextEl.innerText = "Rest";
-                const info = getIntervalData(globalIntervalIndex + 1);
+                const info = getIntervalData(state.globalIntervalIndex + 1);
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
                 beep('rest');
@@ -2158,9 +2179,9 @@
                 beep('cooldown');
                 speak("Cool Down");
             } else {
-                const info = getIntervalData(globalIntervalIndex);
+                const info = getIntervalData(state.globalIntervalIndex);
                 exerciseTextEl.innerText = info.exercise.name;
-                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${exerciseObjects.length}`;
+                roundDisplayEl.innerText = `Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value}`;
                 
                 if (!info.isLastOverall) {
@@ -2177,107 +2198,106 @@
         }
 
         function runTimerLoop() {
-            if (isPaused) return;
+            if (state.isPaused) return;
             
-            timer = requestAnimationFrame(runTimerLoop);
+            state.timer = requestAnimationFrame(runTimerLoop);
             
             const now = Date.now();
-            const timeLeftMs = phaseEndTime - now;
+            const timeLeftMs = state.phaseEndTime - now;
             
             if (timeLeftMs <= 0) {
-                cancelAnimationFrame(timer);
+                cancelAnimationFrame(state.timer);
                 nextPhase();
                 return;
             }
 
             // Smooth progress update
-            const percent = (timeLeftMs / (totalPhaseSeconds * 1000)) * 100;
+            const percent = (timeLeftMs / (state.totalPhaseSeconds * 1000)) * 100;
             updateProgress(percent);
 
             // Integer second updates for text display
             const currentSeconds = Math.ceil(timeLeftMs / 1000);
-            if (currentSeconds !== secondsRemaining) {
-                secondsRemaining = currentSeconds;
-                timeLeftEl.innerText = formatTime(secondsRemaining);
+            if (currentSeconds !== state.secondsRemaining) {
+                state.secondsRemaining = currentSeconds;
+                timeLeftEl.innerText = formatTime(state.secondsRemaining);
                 
-                if (totalTimeRemaining > 0) totalTimeRemaining--;
-                updateTotalTimeDisplay(totalTimeRemaining); // Update text and non-timer bar state
+                if (state.totalTimeRemaining > 0) state.totalTimeRemaining--;
+                updateTotalTimeDisplay(state.totalTimeRemaining); // Update text and non-timer bar state
                 
-                if (secondsRemaining <= 3 && secondsRemaining > 0) {
+                if (state.secondsRemaining <= 3 && state.secondsRemaining > 0) {
                     beep('countdown');
-                    speak(secondsRemaining.toString());
+                    speak(state.secondsRemaining.toString());
                 }
             }
-            const preciseTotalTime = workoutEndTime > 0 ? (workoutEndTime - Date.now()) / 1000 : 0;
+            const preciseTotalTime = state.workoutEndTime > 0 ? (state.workoutEndTime - Date.now()) / 1000 : 0;
             updateProgressBar(preciseTotalTime, true);
         }
 
         function nextPhase(isManualSkip = false) {
-            if (!timer) return;
+            if (!state.timer) return;
             // If manually skipping, cancel current loop frame to prevent double-fire
-            if (timer) cancelAnimationFrame(timer);
+            if (state.timer) cancelAnimationFrame(state.timer);
             
             // If this is a natural transition (not a manual skip), the last second just ended.
             // We need to decrement the total time to account for it before starting the next phase.
-            if (!isManualSkip && totalTimeRemaining > 0) {
-                totalTimeRemaining--;
+            if (!isManualSkip && state.totalTimeRemaining > 0) {
+                state.totalTimeRemaining--;
             }
 
             // If skipping manually, deduct precise time left in current phase
             if (isManualSkip) {
                 let timeToSkip = 0;
-                if (isPaused) {
-                    timeToSkip = pausedTimeRemainingMs;
+                if (state.isPaused) {
+                    timeToSkip = state.pausedTimeRemainingMs;
                 } else {
-                    timeToSkip = Math.max(0, phaseEndTime - Date.now());
+                    timeToSkip = Math.max(0, state.phaseEndTime - Date.now());
                 }
 
                 if (timeToSkip > 0) {
-                    workoutEndTime -= timeToSkip;
+                    state.workoutEndTime -= timeToSkip;
                     
                     // Update integer display
                     const skippedSeconds = Math.ceil(timeToSkip / 1000);
-                    totalTimeRemaining = Math.max(0, totalTimeRemaining - skippedSeconds);
-                    updateTotalTimeDisplay(totalTimeRemaining);
+                    state.totalTimeRemaining = Math.max(0, state.totalTimeRemaining - skippedSeconds);
+                    updateTotalTimeDisplay(state.totalTimeRemaining);
 
                     // Force update progress bar immediately
-                    const preciseTotalTime = Math.max(0, (workoutEndTime - Date.now()) / 1000);
+                    const preciseTotalTime = Math.max(0, (state.workoutEndTime - Date.now()) / 1000);
                     updateProgressBar(preciseTotalTime, true);
                 }
             }
-            
-            if (currentPhase === 'prepare') { currentPhase = 'work'; globalIntervalIndex = 0; totalPhaseSeconds = getIntervalData(0).exercise.duration; }
-            else if (currentPhase === 'work') { 
-                if (getIntervalData(globalIntervalIndex).isLastOverall) { 
+            if (state.currentPhase === 'prepare') { state.currentPhase = 'work'; state.globalIntervalIndex = 0; state.totalPhaseSeconds = getIntervalData(0).exercise.duration; }
+            else if (state.currentPhase === 'work') { 
+                if (getIntervalData(state.globalIntervalIndex).isLastOverall) { 
                     const coolDown = getSecondsFromTimeInput('input-cooldown');
                     if (coolDown > 0) {
-                        currentPhase = 'cooldown';
-                        totalPhaseSeconds = coolDown;
+                        state.currentPhase = 'cooldown';
+                        state.totalPhaseSeconds = coolDown;
                     } else {
                         completeWorkout(); return; 
                     }
-                } else { currentPhase = 'rest'; totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
+                } else { state.currentPhase = 'rest'; state.totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
             }
-            else if (currentPhase === 'cooldown') { completeWorkout(); return; }
-            else { globalIntervalIndex++; currentPhase = 'work'; totalPhaseSeconds = getIntervalData(globalIntervalIndex).exercise.duration; } // Rest -> Work
-            secondsRemaining = totalPhaseSeconds;
+            else if (state.currentPhase === 'cooldown') { completeWorkout(); return; }
+            else { state.globalIntervalIndex++; state.currentPhase = 'work'; state.totalPhaseSeconds = getIntervalData(state.globalIntervalIndex).exercise.duration; } // Rest -> Work
+            state.secondsRemaining = state.totalPhaseSeconds;
             
-            setVisualState(currentPhase, isManualSkip);
-            timeLeftEl.innerText = formatTime(secondsRemaining);
+            setVisualState(state.currentPhase, isManualSkip);
+            timeLeftEl.innerText = formatTime(state.secondsRemaining);
             refillProgress();
             
-            if (!isPaused) {
-                phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
+            if (!state.isPaused) {
+                state.phaseEndTime = Date.now() + (state.totalPhaseSeconds * 1000);
                 runTimerLoop();
             } else {
                 // If paused, prepare the time for when we eventually resume
-                pausedTimeRemainingMs = totalPhaseSeconds * 1000;
+                state.pausedTimeRemainingMs = state.totalPhaseSeconds * 1000;
             }
         }
 
         async function startWorkout() {
-            exerciseObjects = parseExercises();
-            if (exerciseObjects.length === 0) {
+            state.exerciseObjects = parseExercises();
+            if (state.exerciseObjects.length === 0) {
                 // If no exercises, add one so the user can start
                 addNewExerciseRow();
                 return;
@@ -2294,66 +2314,66 @@
             await wakeLockManager.enable();
             
             const prep = getSecondsFromTimeInput('input-prepare');
-            isPaused = false;
-            currentPhase = prep > 0 ? 'prepare' : 'work';
-            totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
-            secondsRemaining = totalPhaseSeconds;
-            phaseEndTime = Date.now() + (totalPhaseSeconds * 1000);
-            totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
-            initialTotalTime = totalTimeRemaining; // Store initial total for progress bar
-            workoutEndTime = Date.now() + (initialTotalTime * 1000);
+            state.isPaused = false;
+            state.currentPhase = prep > 0 ? 'prepare' : 'work';
+            state.totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
+            state.secondsRemaining = state.totalPhaseSeconds;
+            state.phaseEndTime = Date.now() + (state.totalPhaseSeconds * 1000);
+            state.totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
+            state.initialTotalTime = state.totalTimeRemaining; // Store initial total for progress bar
+            state.workoutEndTime = Date.now() + (state.initialTotalTime * 1000);
             
-            timeLeftEl.innerText = formatTime(secondsRemaining); 
+            timeLeftEl.innerText = formatTime(state.secondsRemaining); 
             updateProgress(100); // Set initial progress to full
             
-            setVisualState(currentPhase);
+            setVisualState(state.currentPhase);
             btnStart.classList.add('hidden');
             btnPause.classList.remove('hidden');
             
             // Start timer AFTER displaying initial state
-            if (timer) cancelAnimationFrame(timer);
+            if (state.timer) cancelAnimationFrame(state.timer);
             runTimerLoop();
             switchTab('timer');
         }
 
         async function togglePause() { 
-            if (!timer) return; 
-            isPaused = !isPaused; 
+            if (!state.timer) return; 
+            state.isPaused = !state.isPaused; 
             
-            if (isPaused) {
-                cancelAnimationFrame(timer);
+            if (state.isPaused) {
+                cancelAnimationFrame(state.timer);
                 // Calculate exact remaining time to preserve precision
-                pausedTimeRemainingMs = phaseEndTime - Date.now();
-                pauseStartTime = Date.now();
+                state.pausedTimeRemainingMs = state.phaseEndTime - Date.now();
+                state.pauseStartTime = Date.now();
                 
                 await wakeLockManager.disable();
                 speechManager.cancel();
                 btnStart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>`;
             } else {
                 // Resume using exact stored time
-                phaseEndTime = Date.now() + pausedTimeRemainingMs;
-                if (pauseStartTime > 0) {
-                    const pauseDuration = Date.now() - pauseStartTime;
-                    workoutEndTime += pauseDuration;
-                    pauseStartTime = 0;
+                state.phaseEndTime = Date.now() + state.pausedTimeRemainingMs;
+                if (state.pauseStartTime > 0) {
+                    const pauseDuration = Date.now() - state.pauseStartTime;
+                    state.workoutEndTime += pauseDuration;
+                    state.pauseStartTime = 0;
                 }
                 await wakeLockManager.enable();
                 runTimerLoop();
             }
             
-            btnStart.classList.toggle('hidden', !isPaused); 
-            btnPause.classList.toggle('hidden', isPaused); 
+            btnStart.classList.toggle('hidden', !state.isPaused); 
+            btnPause.classList.toggle('hidden', state.isPaused); 
         }
         
         async function completeWorkout() { 
-            if (timer) cancelAnimationFrame(timer);
-            timer = null; 
+            if (state.timer) cancelAnimationFrame(state.timer);
+            state.timer = null; 
             
             await wakeLockManager.disable();
 
             // Set final time to 00:00
-            totalTimeRemaining = 0;
-            updateTotalTimeDisplay(totalTimeRemaining);
+            state.totalTimeRemaining = 0;
+            updateTotalTimeDisplay(state.totalTimeRemaining);
             
             // Visual celebration - synchronized pulsing
             
@@ -2407,9 +2427,9 @@
             console.log('🔄 Soft reset initiated');
             
             // Stop and clear timer
-            if (timer) {
-                cancelAnimationFrame(timer);
-                timer = null;
+            if (state.timer) {
+                cancelAnimationFrame(state.timer);
+                state.timer = null;
             }
             
             // Cleanup resources
@@ -2417,15 +2437,15 @@
             speechManager.cancel();
             
             // Reset all state variables
-            isPaused = false;
-            currentPhase = 'prepare';
-            globalIntervalIndex = 0;
-            secondsRemaining = 0;
-            totalPhaseSeconds = 0;
-            initialTotalTime = 0;
-            workoutEndTime = 0;
-            pauseStartTime = 0;
-            exerciseObjects = [];
+            state.isPaused = false;
+            state.currentPhase = 'prepare';
+            state.globalIntervalIndex = 0;
+            state.secondsRemaining = 0;
+            state.totalPhaseSeconds = 0;
+            state.initialTotalTime = 0;
+            state.workoutEndTime = 0;
+            state.pauseStartTime = 0;
+            state.exerciseObjects = [];
             
             // Reset UI - Status and Exercise
             exerciseTextEl.innerText = 'Get Ready';
@@ -2477,7 +2497,7 @@
             document.getElementById('btn-start').addEventListener('click', async () => {
                 speechManager.initialize();
                 await soundManager.unlock();
-                if (timer && isPaused) {
+                if (state.timer && state.isPaused) {
                     togglePause();
                 } else {
                     startWorkout();
@@ -2564,17 +2584,17 @@
 
             // --- Page visibility ---
             document.addEventListener('visibilitychange', () => {
-                if (!timer || isPaused) return;
+                if (!state.timer || state.isPaused) return;
                 if (document.hidden) {
-                    cancelAnimationFrame(timer);
-                    pausedTimeRemainingMs = Math.max(0, phaseEndTime - Date.now());
-                    pauseStartTime = Date.now();
+                    cancelAnimationFrame(state.timer);
+                    state.pausedTimeRemainingMs = Math.max(0, state.phaseEndTime - Date.now());
+                    state.pauseStartTime = Date.now();
                 } else {
-                    if (pauseStartTime > 0) {
-                        const pauseDuration = Date.now() - pauseStartTime;
-                        workoutEndTime += pauseDuration;
-                        phaseEndTime = Date.now() + pausedTimeRemainingMs;
-                        pauseStartTime = 0;
+                    if (state.pauseStartTime > 0) {
+                        const pauseDuration = Date.now() - state.pauseStartTime;
+                        state.workoutEndTime += pauseDuration;
+                        state.phaseEndTime = Date.now() + state.pausedTimeRemainingMs;
+                        state.pauseStartTime = 0;
                         runTimerLoop();
                     }
                 }
@@ -2586,7 +2606,7 @@
                 switch (e.code) {
                     case 'Space':
                         e.preventDefault();
-                        if (timer || isPaused) {
+                        if (state.timer || state.isPaused) {
                             togglePause();
                         } else {
                             speechManager.initialize();
@@ -2595,7 +2615,7 @@
                         break;
                     case 'KeyR': resetTimer(); break;
                     case 'KeyM': toggleMute(); break;
-                    case 'ArrowRight': if (timer && !isPaused) nextPhase(true); break;
+                    case 'ArrowRight': if (state.timer && !state.isPaused) nextPhase(true); break;
                 }
             });
 
