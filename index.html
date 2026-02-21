@@ -2225,11 +2225,11 @@
 
             let progress;
             if (isRunning) {
-                // Smoothly update based on precise time remaining
-                progress = (state.initialTotalTime > 0) ? (time / state.initialTotalTime) * 100 : 0;
+                // Increment — grows from 0% to 100% as workout progresses
+                progress = (state.initialTotalTime > 0) ? (1 - time / state.initialTotalTime) * 100 : 0;
             } else {
-                // Set static state: 100% if a workout is configured, 0% otherwise
-                progress = (time > 0) ? 100 : 0;
+                // Set static state: 0% when not running
+                progress = 0;
             }
             totalProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
         }
