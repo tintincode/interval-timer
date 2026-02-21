@@ -7,6 +7,12 @@
     <meta name="description" content="A sleek interval timer for HIIT and circuit training — customisable exercises, voice cues and saved routines.">
     <meta property="og:title" content="Interval Timer">
     <meta property="og:description" content="A sleek interval timer for HIIT and circuit training.">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Interval Timer">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>Interval Timer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -140,23 +146,14 @@
         @media (max-height: 700px) {
             body > div > header { padding-top: 1.5rem; margin-bottom: 0.5rem; }
             body > div .nav-container { margin-bottom: 1rem; margin-left: 1.5rem; margin-right: 1.5rem; }
-            #time-left { font-size: 5rem; }
-            #current-exercise { font-size: 1.5rem; }
             .progress-svg-container { max-width: 260px; }
             .media-controls { margin-top: 0.5rem; gap: 1rem; }
             #view-timer { gap: 1rem; }
         }
 
         @media (max-width: 400px) {
-            .progress-svg-container { 
-                max-width: 340px; 
-            }
-            .exercise-label-container {
-                width: 220px;
-            }
-            #current-exercise {
-                font-size: 1.5rem;
-            }
+            .progress-svg-container { max-width: 340px; }
+            .exercise-label-container { width: 220px; }
         }
 
         .exercise-label-container {
@@ -333,7 +330,7 @@
                 <!-- Screen reader live region for phase/exercise announcements -->
                 <div id="sr-announcement" aria-live="polite" aria-atomic="true" class="sr-only"></div>
                 <div class="relative w-full flex items-center justify-center px-4">
-                    <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center">
+                    <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center" style="container-type: inline-size; container-name: circle;">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
                             <circle class="text-white/5" stroke-width="12" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
                             <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="12" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
@@ -341,16 +338,16 @@
                         <div class="relative z-10 flex flex-col items-center justify-center text-center select-none w-full h-full">
                             <div class="flex-1 flex items-center justify-center">
                                 <div class="exercise-label-container translate-y-7">
-                                    <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase text-3xl">Get Ready</span>
+                                    <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase" style="font-size: 8.5cqw;">Get Ready</span>
                                 </div>
                             </div>
                             <!-- 00:00 is the true visual centre — no flex grow on siblings -->
-                            <span id="time-left" class="text-[6rem] font-black tracking-tighter tabular-nums leading-none flex-shrink-0">00:00</span>
+                            <span id="time-left" class="font-black tracking-tighter tabular-nums leading-none flex-shrink-0" style="font-size: 28cqw;">00:00</span>
                             <!-- Sub-info floats below, pushed up from bottom -->
                             <div class="flex-1 flex flex-col items-center pt-2">
-                                <span id="circuit-display" class="text-[12px] font-bold text-white/40 uppercase tracking-[0.12em] tabular-nums whitespace-nowrap"> </span>
-                                <span id="total-time-display" class="text-sm font-bold text-white/40 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums">--:--</span>
-                                <div id="total-progress-bar-container" class="w-28 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300">
+                                <span id="circuit-display" class="font-bold text-white/40 uppercase tracking-[0.12em] tabular-nums whitespace-nowrap" style="font-size: 3.2cqw;"> </span>
+                                <span id="total-time-display" class="font-bold text-white/40 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums" style="font-size: 3.8cqw;">--:--</span>
+                                <div id="total-progress-bar-container" class="h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300" style="width: 28cqw;">
                                     <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                                 </div>
                             </div>
@@ -2883,6 +2880,11 @@
         timeLeftEl.innerText = formatTime(0);
         updateTotalTimeDisplay();
         updateCountsDisplay();
+
+        // Register service worker for PWA / offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
     </script>
 </body>
 </html>
