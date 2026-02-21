@@ -332,8 +332,8 @@
                 <div class="relative w-full flex items-center justify-center px-4">
                     <div class="progress-svg-container relative w-full max-w-[360px] aspect-square flex items-center justify-center" style="container-type: inline-size; container-name: circle;">
                         <svg class="absolute inset-0 w-full h-full z-0" viewBox="0 0 320 320">
-                            <circle class="text-white/5" stroke-width="10" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
-                            <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="10" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
+                            <circle class="text-white/5" stroke-width="12" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
+                            <circle id="progress-circle" class="progress-ring__circle text-blue-500" stroke-width="12" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="148" cx="160" cy="160" />
                         </svg>
                         <div class="relative z-10 flex flex-col items-center justify-center text-center select-none w-full h-full">
                             <div class="flex-1 flex items-center justify-center">
@@ -344,12 +344,13 @@
                             <!-- 00:00 is the true visual centre — no flex grow on siblings -->
                             <span id="time-left" class="font-black tracking-tighter tabular-nums leading-none flex-shrink-0" style="font-size: 28cqw;">00:00</span>
                             <!-- Sub-info floats below, pushed up from bottom -->
-                            <div class="flex-1 flex flex-col items-center pt-2">
+                            <div class="flex-1 flex flex-col items-center pt-2 relative">
                                 <span id="circuit-display" class="font-bold text-white/40 uppercase tracking-[0.12em] tabular-nums whitespace-nowrap" style="font-size: 3.2cqw;"> </span>
                                 <span id="total-time-display" class="font-bold text-white/40 uppercase tracking-[0.2em] mt-1 transition-opacity duration-300 tabular-nums" style="font-size: 3.8cqw;">--:--</span>
-                                <div id="total-progress-bar-container" class="h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300" style="width: 30cqw;">
-                                    <div id="total-progress-bar" class="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                                <div id="total-progress-bar-container" class="h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 transition-opacity duration-300" style="width: 28cqw;">
+                                    <div id="total-progress-bar" class="h-full w-0 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                                 </div>
+                                <span id="completion-medal" class="hidden absolute inset-0 flex items-center justify-center" style="font-size: 8cqw; line-height: 1;">🥇</span>
                             </div>
                         </div>
                     </div>
@@ -357,7 +358,7 @@
 
                 <div id="next-up-container" class="flex flex-col items-center justify-center opacity-0 transition-all duration-500">
                     <div class="flex items-center gap-2">
-                        <span class="text-[12px] font-black text-white/20 uppercase tracking-[0.5em]">Next</span>
+                        <span class="text-[11px] font-black text-white/20 uppercase tracking-[0.5em]">Next</span>
                         <span id="next-exercise-name" class="text-lg font-bold text-white/60 uppercase tracking-widest text-center">---</span>
                     </div>
                 </div>
@@ -516,7 +517,7 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
                                 </button>
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
-                                <input type="text" id="input-cooldown" value="00:00" data-seconds="0"
+                                <input type="text" id="input-cooldown" value="00:10" data-seconds="0"
                                     class="w-16 bg-transparent text-base font-black text-center outline-none tabular-nums value-display py-0">
                                 <div class="w-px h-5 bg-white/10 flex-shrink-0"></div>
                                 <button class="stepper-btn ios-button w-11 h-11 flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors flex-shrink-0"
@@ -963,7 +964,7 @@
             // Exercise list — the canonical data model
             exercises: [
                 { name: "Jumping jacks", duration: null },
-                { name: "Push ups", duration: 30 },
+                { name: "Push ups", duration: null },
                 { name: "Crunches", duration: null },
                 { name: "Walk outs", duration: null },
                 { name: "Squats", duration: null },
@@ -2606,10 +2607,10 @@
             progressCircle.classList.remove(...allCircleClasses, 'text-yellow-400');
             progressCircle.classList.add('text-yellow-300');
 
-            // Make total progress bar yellow and full to signify 100% completion
-            totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses);
-            totalProgressBar.classList.add('bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
-            totalProgressBar.style.width = '100%';
+            // Hide progress bar, show medal
+            totalProgressBarContainer.classList.add('opacity-0');
+            const medalEl = document.getElementById('completion-medal');
+            if (medalEl) { medalEl.classList.remove('hidden'); animationManager.pulseScale(medalEl); }
             
             nextUpContainer.classList.replace('opacity-100', 'opacity-0');
             btnStart.innerHTML = PLAY_ICON_HTML;
@@ -2668,9 +2669,19 @@
             progressCircle.classList.add('text-blue-500');
             updateProgress(100);
 
-            // Reset total progress bar
+            // Reset total progress bar, hide medal
             totalProgressBar.classList.remove(...allBarClasses, ...allShadowClasses, 'bg-yellow-300', 'shadow-[0_0_10px_rgba(253,224,71,0.5)]');
             totalProgressBar.classList.add('bg-blue-500', 'shadow-[0_0_10px_rgba(59,130,246,0.5)]');
+            totalProgressBar.style.width = '0%';
+            totalProgressBarContainer.style.transition = 'none';
+            totalProgressBarContainer.classList.remove('opacity-0');
+            nextUpContainer.style.transition = 'none';
+            requestAnimationFrame(() => {
+                totalProgressBarContainer.style.transition = '';
+                nextUpContainer.style.transition = '';
+            });
+            const medalEl = document.getElementById('completion-medal');
+            if (medalEl) medalEl.classList.add('hidden');
             
             // Remove celebration glow
             const completionGlow = document.getElementById('completion-glow');
