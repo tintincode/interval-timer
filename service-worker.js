@@ -1,4 +1,4 @@
-const CACHE = 'interval-timer-v1';
+const CACHE = 'interval-timer-v2';
 
 const ASSETS = [
   './index.html',
