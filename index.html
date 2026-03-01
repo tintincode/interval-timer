@@ -660,6 +660,18 @@
         const warn = (...a) => DEBUG && console.warn(...a);
         // Errors always surface (they indicate real failures)
         const err  = (...a) => console.error(...a);
+        const STORAGE_KEYS = Object.freeze({
+            routines: 'intervalTimerRoutines',
+            settings: 'intervalTimerSettings'
+        });
+
+        function readFromStorage(key) {
+            return localStorage.getItem(key);
+        }
+
+        function writeToStorage(key, value) {
+            localStorage.setItem(key, value);
+        }
 
         // ============================================
         // ICON CONSTANTS
@@ -946,16 +958,15 @@
         // ============================================
         const CIRCLE_RADIUS = 148;
         const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
+        const TOTAL_PROGRESS_UPDATE_INTERVAL_MS = 80;
 
         const timeLeftEl = document.getElementById('time-left');
-        const roundDisplayEl = null; // merged into circuitDisplayEl
         const circuitDisplayEl = document.getElementById('circuit-display');
         const totalTimeDisplayEl = document.getElementById('total-time-display');
         const exerciseTextEl = document.getElementById('current-exercise');
         const totalProgressBar = document.getElementById('total-progress-bar');
         const totalProgressBarContainer = document.getElementById('total-progress-bar-container');
         const progressCircle = document.getElementById('progress-circle');
-        const navIndicator = document.getElementById('nav-indicator');
         const btnMute = document.getElementById('btn-mute');
         const iconMuted = document.getElementById('icon-muted');
         const iconUnmuted = document.getElementById('icon-unmuted');
@@ -999,6 +1010,7 @@
                 pausedTimeRemainingMs: 0,
                 workoutEndTime: 0,
                 pauseStartTime: 0,
+                lastProgressBarUpdateAt: 0,
             },
         };
 
@@ -1023,7 +1035,7 @@
 
         function loadRoutines() {
             try {
-                const stored = localStorage.getItem('intervalTimerRoutines');
+                const stored = readFromStorage(STORAGE_KEYS.routines);
                 if (stored) {
                     try {
                         appState.savedRoutines = JSON.parse(stored);
@@ -1041,7 +1053,7 @@
 
         function saveRoutines() {
             try {
-                localStorage.setItem('intervalTimerRoutines', JSON.stringify(appState.savedRoutines));
+                writeToStorage(STORAGE_KEYS.routines, JSON.stringify(appState.savedRoutines));
             } catch (e) {
                 warn('Could not save routines (storage unavailable):', e);
             }
@@ -1451,8 +1463,12 @@
             });
         }
 
-        function saveSettings() {
-            const settings = {
+        const SETTINGS_SAVE_DEBOUNCE_MS = 200;
+        let settingsSaveTimer = null;
+        let pendingSettingsSnapshot = null;
+
+        function createSettingsSnapshot() {
+            return {
                 exercises: appState.exercises,
                 workTime: getSecondsFromTimeInput('input-work'),
                 restTime: getSecondsFromTimeInput('input-rest'),
@@ -1463,17 +1479,47 @@
                 audioType: appState.audioType,
                 routineIndex: appState.currentRoutineIndex
             };
+        }
+
+        function persistSettingsSnapshot(settings) {
             try {
-                localStorage.setItem('intervalTimerSettings', JSON.stringify(settings));
+                writeToStorage(STORAGE_KEYS.settings, JSON.stringify(settings));
             } catch (e) {
                 warn('Could not save settings (storage unavailable):', e);
             }
         }
 
+        // Debounced by default to avoid synchronous localStorage writes on each keystroke.
+        function saveSettings(immediate = false) {
+            pendingSettingsSnapshot = createSettingsSnapshot();
+
+            if (immediate) {
+                if (settingsSaveTimer) {
+                    clearTimeout(settingsSaveTimer);
+                    settingsSaveTimer = null;
+                }
+                persistSettingsSnapshot(pendingSettingsSnapshot);
+                pendingSettingsSnapshot = null;
+                return;
+            }
+
+            if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
+            settingsSaveTimer = setTimeout(() => {
+                settingsSaveTimer = null;
+                if (!pendingSettingsSnapshot) return;
+                persistSettingsSnapshot(pendingSettingsSnapshot);
+                pendingSettingsSnapshot = null;
+            }, SETTINGS_SAVE_DEBOUNCE_MS);
+        }
+
+        function flushSettingsSave() {
+            saveSettings(true);
+        }
+
         function loadSettings() {
             let saved = null;
             try {
-                saved = localStorage.getItem('intervalTimerSettings');
+                saved = readFromStorage(STORAGE_KEYS.settings);
             } catch (e) {
                 warn('Could not load settings (storage unavailable):', e);
             }
@@ -1526,7 +1572,6 @@
                     }
 
                     updateAudioTypeUI();
-                    renderExerciseList();
                 } catch (e) {
                     err('Error loading settings:', e);
                 }
@@ -1615,17 +1660,50 @@
             container.innerHTML = '';
             
             appState.exercises.forEach(item => {
-                createExerciseRow(item.name, item.duration || '');
+                createExerciseRow(item.name, item.duration ?? '', { skipReindex: true });
             });
             
             // Show/hide empty state
             const emptyState = document.getElementById('exercises-empty-state');
             if (emptyState) emptyState.classList.toggle('hidden', appState.exercises.length > 0);
 
-            if (appState.exercises.length === 0) createExerciseRow('', '');
+            if (appState.exercises.length === 0) createExerciseRow('', '', { skipReindex: true });
+            reindexExerciseRows();
         }
 
-        function createExerciseRow(name = '', duration = '') {
+        function reindexExerciseRows() {
+            const container = document.getElementById('exercises-list');
+            if (!container) return;
+            container.querySelectorAll('.exercise-row').forEach((row, index) => {
+                row.dataset.exerciseIndex = String(index);
+            });
+        }
+
+        function syncExerciseRowToState(row) {
+            if (!row) return;
+            const index = parseInt(row.dataset.exerciseIndex, 10);
+            if (Number.isNaN(index)) return;
+
+            const nameInput = row.querySelector('.exercise-name-input');
+            const durInput = row.querySelector('.exercise-duration-input');
+            if (!nameInput || !durInput) return;
+
+            const name = nameInput.value.trim();
+            const durationVal = durInput.value.trim();
+            appState.exercises[index] = {
+                name: name,
+                duration: durationVal ? parseTimeInput(durationVal) : null
+            };
+        }
+
+        function handleExerciseRowInput(row) {
+            syncExerciseRowToState(row);
+            saveSettings();
+            updateTotalTimeDisplay();
+            updateCountsDisplay();
+        }
+
+        function createExerciseRow(name = '', duration = '', { skipReindex = false } = {}) {
             const container = document.getElementById('exercises-list');
             const div = document.createElement('div');
             
@@ -1661,6 +1739,7 @@
             rowContent.appendChild(deleteBtn);
             div.appendChild(rowContent);
             container.appendChild(div);
+            if (!skipReindex) reindexExerciseRows();
             
             // Wire delete button
             div.querySelector('.delete-btn').addEventListener('click', () => removeExerciseRow(div));
@@ -1680,7 +1759,7 @@
             
             const inputs = div.querySelectorAll('input');
             inputs.forEach(input => {
-                input.addEventListener('input', updateExercisesFromUI);
+                input.addEventListener('input', () => handleExerciseRowInput(div));
                 
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -1696,7 +1775,7 @@
                             const seconds = parseTimeInput(val);
                             this.value = seconds > 0 ? formatToMMSS(seconds) : '';
                         }
-                        updateExercisesFromUI();
+                        handleExerciseRowInput(div);
                     });
                 }
             });
@@ -1947,6 +2026,7 @@
             });
             
             appState.exercises = newExercises;
+            reindexExerciseRows();
             
             // Show/hide empty state
             const emptyState = document.getElementById('exercises-empty-state');
@@ -2056,14 +2136,6 @@
             }, 420);
         }
 
-        function startTimeIncrement(inputId) {
-            startAdjustment(() => incrementTimeValue(inputId));
-        }
-
-        function startTimeDecrement(inputId) {
-            startAdjustment(() => decrementTimeValue(inputId));
-        }
-
         function stopAdjustment() {
             clearTimeout(adjustmentTimeout);
             adjustmentTimeout = null;
@@ -2111,15 +2183,6 @@
                 }
             }
         }
-
-        function startIncrement(inputId) {
-            startAdjustment(() => incrementValue(inputId));
-        }
-
-        function startDecrement(inputId) {
-            startAdjustment(() => decrementValue(inputId));
-        }
-
 
         function switchTab(tab) {
             const timerView = document.getElementById('view-timer');
@@ -2205,7 +2268,7 @@
             return appState.exercises.map((item, index) => { 
                 return { 
                     name: item.name || `Exercise ${index + 1}`, 
-                    duration: item.duration || defaultWork 
+                    duration: item.duration ?? defaultWork 
                 }; 
             }); 
         }
@@ -2419,8 +2482,16 @@
                     speak(state.secondsRemaining.toString());
                 }
             }
-            const preciseTotalTime = state.workoutEndTime > 0 ? Math.max(0, (state.workoutEndTime - Date.now()) / 1000) : 0;
-            updateProgressBar(preciseTotalTime, true);
+            if (
+                state.workoutEndTime > 0 &&
+                (state.lastProgressBarUpdateAt === 0 ||
+                 (now - state.lastProgressBarUpdateAt) >= TOTAL_PROGRESS_UPDATE_INTERVAL_MS ||
+                 timeLeftMs <= 250)
+            ) {
+                const preciseTotalTime = Math.max(0, (state.workoutEndTime - now) / 1000);
+                updateProgressBar(preciseTotalTime, true);
+                state.lastProgressBarUpdateAt = now;
+            }
         }
 
         function nextPhase(isManualSkip = false) {
@@ -2526,6 +2597,7 @@
             state.totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
             state.initialTotalTime = state.totalTimeRemaining; // Store initial total for progress bar
             state.workoutEndTime = Date.now() + (state.initialTotalTime * 1000);
+            state.lastProgressBarUpdateAt = 0;
             
             timeLeftEl.innerText = formatTime(state.secondsRemaining); 
             updateProgress(100); // Set initial progress to full
@@ -2654,6 +2726,7 @@
             state.initialTotalTime = 0;
             state.workoutEndTime = 0;
             state.pauseStartTime = 0;
+            state.lastProgressBarUpdateAt = 0;
             state.exerciseObjects = [];
             
             // Reset UI - Status and Exercise
@@ -2881,6 +2954,7 @@
 
             // --- beforeunload cleanup ---
             window.addEventListener('beforeunload', async () => {
+                flushSettingsSave();
                 await wakeLockManager.disable();
                 speechManager.cancel();
             });
