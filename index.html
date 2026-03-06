@@ -161,14 +161,16 @@
 
         @media (max-width: 400px) {
             .progress-svg-container { max-width: 340px; }
-            .exercise-label-container { width: 220px; }
+            .exercise-label-container { width: min(64cqw, 220px); }
         }
 
         .exercise-label-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 240px;
+            width: min(64cqw, 240px);
+            padding-inline: 6px;
+            box-sizing: border-box;
             overflow: hidden;
         }
         
@@ -184,6 +186,7 @@
             text-align: center;
             white-space: normal;
             word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .exercise-row.dragging {
