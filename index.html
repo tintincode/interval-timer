@@ -2596,7 +2596,17 @@
                     } else {
                         completeWorkout(); return; 
                     }
-                } else { state.currentPhase = 'rest'; state.totalPhaseSeconds = getSecondsFromTimeInput('input-rest'); }
+                } else {
+                    const restSeconds = getSecondsFromTimeInput('input-rest');
+                    if (restSeconds > 0) {
+                        state.currentPhase = 'rest';
+                        state.totalPhaseSeconds = restSeconds;
+                    } else {
+                        state.globalIntervalIndex++;
+                        state.currentPhase = 'work';
+                        state.totalPhaseSeconds = getIntervalData(state.globalIntervalIndex).exercise.duration;
+                    }
+                }
             }
             else if (state.currentPhase === 'cooldown') { completeWorkout(); return; }
             else { state.globalIntervalIndex++; state.currentPhase = 'work'; state.totalPhaseSeconds = getIntervalData(state.globalIntervalIndex).exercise.duration; } // Rest -> Work
