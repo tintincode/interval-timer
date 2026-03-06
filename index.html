@@ -664,6 +664,48 @@
             routines: 'intervalTimerRoutines',
             settings: 'intervalTimerSettings'
         });
+        const PRELOADED_ROUTINES = Object.freeze([
+            {
+                name: '5 Minutes Warm Up',
+                exercises: [
+                    { name: 'Torso twists', duration: null },
+                    { name: 'Torso Rotations', duration: null },
+                    { name: 'Oblique Twists', duration: null },
+                    { name: 'Side step + reach', duration: null },
+                    { name: 'Butt kicks + arm pulls', duration: null },
+                    { name: 'Arm circles front & back', duration: null },
+                    { name: 'Run in place & shake it out', duration: null },
+                    { name: 'Quad stretches', duration: null },
+                    { name: 'Neck mobility', duration: null },
+                    { name: 'Sumo squat + pulse', duration: null }
+                ],
+                workTime: 30,
+                restTime: 0,
+                circuits: 1,
+                prepTime: 10,
+                coolDownTime: 0,
+                voiceEnabled: true,
+                audioType: 'voice'
+            },
+            {
+                name: 'Full Body Home Workout',
+                exercises: [
+                    { name: 'Jumping jacks', duration: null },
+                    { name: 'Push ups', duration: null },
+                    { name: 'Crunches', duration: null },
+                    { name: 'Walk outs', duration: null },
+                    { name: 'Squats', duration: null },
+                    { name: 'Mountain climbers', duration: null }
+                ],
+                workTime: 30,
+                restTime: 15,
+                circuits: 3,
+                prepTime: 10,
+                coolDownTime: 0,
+                voiceEnabled: true,
+                audioType: 'voice'
+            }
+        ]);
 
         function readFromStorage(key) {
             return localStorage.getItem(key);
@@ -1036,13 +1078,30 @@
         function loadRoutines() {
             try {
                 const stored = readFromStorage(STORAGE_KEYS.routines);
-                if (stored) {
+                let shouldSeedDefaults = false;
+
+                if (stored === null) {
+                    shouldSeedDefaults = true;
+                } else {
                     try {
-                        appState.savedRoutines = JSON.parse(stored);
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) {
+                            appState.savedRoutines = parsed;
+                        } else {
+                            appState.savedRoutines = [];
+                            shouldSeedDefaults = true;
+                        }
                     } catch (e) {
                         err('Error parsing routines', e);
                         appState.savedRoutines = [];
+                        shouldSeedDefaults = true;
                     }
+                }
+
+                // First run or corrupted payload fallback: seed with built-in routines.
+                if (shouldSeedDefaults) {
+                    appState.savedRoutines = structuredClone(PRELOADED_ROUTINES);
+                    saveRoutines();
                 }
             } catch (e) {
                 warn('Could not load routines (storage unavailable):', e);
