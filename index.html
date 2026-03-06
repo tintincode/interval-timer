@@ -181,7 +181,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.3;
+            line-height: 1.1;
             max-width: 100%;
             text-align: center;
             white-space: normal;
@@ -349,7 +349,7 @@
                         <div class="relative z-10 flex flex-col items-center justify-center text-center select-none w-full h-full">
                             <div class="flex-1 flex items-center justify-center">
                                 <div class="exercise-label-container translate-y-7">
-                                    <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase" style="font-size: 8.5cqw;">Get Ready</span>
+                                    <span id="current-exercise" class="text-blue-400 font-black tracking-wide uppercase">Get Ready</span>
                                 </div>
                             </div>
                             <!-- 00:00 is the true visual centre — no flex grow on siblings -->
@@ -2335,6 +2335,23 @@
             }); 
         }
         
+        function updateExerciseDisplay(text) {
+            exerciseTextEl.innerText = text;
+            const len = text.length;
+            let fontSize;
+
+            if (len <= 10) {
+                fontSize = '10.0cqw';
+            } else if (len <= 20) {
+                fontSize = '8.5cqw';
+            } else if (len <= 30) {
+                fontSize = '7.0cqw';
+            } else {
+                fontSize = '5.5cqw';
+            }
+            exerciseTextEl.style.fontSize = fontSize;
+        }
+
         function calculateTotalTime() {
             if (appState.exercises.length === 0) return 0;
             
@@ -2458,7 +2475,7 @@
             };
 
             if (phase === 'prepare') {
-                exerciseTextEl.innerText = "Get Ready";
+                updateExerciseDisplay("Get Ready");
                 const info = getIntervalData(0);
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value} · Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 nextExerciseNameEl.innerText = info.exercise.name;
@@ -2467,7 +2484,7 @@
                 beep('prepare');
                 speak(`Get ready. First, ${info.exercise.name}.`);
             } else if (phase === 'rest') {
-                exerciseTextEl.innerText = "Rest";
+                updateExerciseDisplay("Rest");
                 const info = getIntervalData(state.globalIntervalIndex + 1);
                 nextExerciseNameEl.innerText = info.exercise.name;
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
@@ -2475,7 +2492,7 @@
                 beep('rest');
                 speak(`Rest. Next is ${info.exercise.name}.`);
             } else if (phase === 'cooldown') {
-                exerciseTextEl.innerText = "Cool Down";
+                updateExerciseDisplay("Cool Down");
                 // circuit/exercise display intentionally left unchanged during cool down
                 nextExerciseNameEl.innerText = "Complete";
                 nextUpContainer.classList.replace('opacity-0', 'opacity-100');
@@ -2484,7 +2501,7 @@
                 speak("Cool Down");
             } else {
                 const info = getIntervalData(state.globalIntervalIndex);
-                exerciseTextEl.innerText = info.exercise.name;
+                updateExerciseDisplay(info.exercise.name);
                 circuitDisplayEl.innerText = `Circuit ${info.circuitNum} / ${inputRounds.value} · Exercise ${info.exerciseNum} / ${state.exerciseObjects.length}`;
                 
                 if (!info.isLastOverall) {
@@ -2725,9 +2742,8 @@
             updateTotalTimeDisplay(state.totalTimeRemaining);
             
             // Visual celebration - synchronized pulsing
-            
             // Change text to soft pastel yellow
-            exerciseTextEl.innerText = "Amazing!"; 
+            updateExerciseDisplay("Amazing!");
             exerciseTextEl.classList.remove(...allTextClasses);
             exerciseTextEl.classList.add('text-yellow-300');
             
@@ -2802,7 +2818,7 @@
             state.exerciseObjects = [];
             
             // Reset UI - Status and Exercise
-            exerciseTextEl.innerText = 'Get Ready';
+            updateExerciseDisplay('Get Ready');
             exerciseTextEl.classList.remove(...allTextClasses, 'text-yellow-300', 'text-yellow-400');
             exerciseTextEl.classList.add('text-blue-400');
             
@@ -3045,6 +3061,7 @@
         timeLeftEl.innerText = formatTime(0);
         updateTotalTimeDisplay();
         updateCountsDisplay();
+        updateExerciseDisplay('Get Ready');
 
         // Register service worker for PWA / offline support
         // and proactively check for updates on each app load.
