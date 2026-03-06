@@ -629,6 +629,12 @@
                                     Restore
                                 </button>
                             </div>
+                            <div class="border-t border-white/[0.07]">
+                                <button id="btn-restore-defaults" class="w-full ios-button touch-target py-3 text-xs font-bold uppercase tracking-wider text-white/30 hover:text-white/50 transition-colors flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 001.414 1.414L9 9.414V12a1 1 0 102 0V9.414l.293.293a1 1 0 001.414-1.414l-3-3z" clip-rule="evenodd" /></svg>
+                                    Restore Default Routines
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1445,6 +1451,42 @@
                 button.setAttribute('aria-expanded', 'false');
                 arrow.style.transform = 'rotate(0deg)';
             }
+        }
+
+        async function restoreDefaultRoutines() {
+            const routinesToAdd = PRELOADED_ROUTINES.filter(
+                preloaded => !appState.savedRoutines.some(saved => saved.name === preloaded.name)
+            );
+
+            if (routinesToAdd.length === 0) {
+                await showModal({
+                    title: 'No Action Needed',
+                    message: 'All default routines are already in your list.',
+                    confirmText: 'OK',
+                    cancelText: null
+                });
+                return;
+            }
+
+            const confirmed = await showModal({
+                title: 'Restore Defaults',
+                message: `This will add ${routinesToAdd.length} missing default routine(s) to your list. It will not affect your custom routines.`,
+                confirmText: 'Restore',
+                confirmColor: 'bg-blue-500'
+            });
+
+            if (!confirmed) return;
+
+            appState.savedRoutines.push(...structuredClone(routinesToAdd));
+            saveRoutines();
+            updateRoutineSelect();
+            
+            await showModal({
+                title: 'Success',
+                message: 'Default routines have been restored.',
+                confirmText: 'OK',
+                cancelText: null
+            });
         }
 
         // ============================================
@@ -2906,6 +2948,7 @@
             document.getElementById('btn-export').addEventListener('click', exportRoutines);
             document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
             document.getElementById('import-file').addEventListener('change', function() { handleFileImport(this); });
+            document.getElementById('btn-restore-defaults').addEventListener('click', restoreDefaultRoutines);
 
             // --- Add exercise ---
             document.getElementById('btn-add-exercise').addEventListener('click', addNewExerciseRow);
