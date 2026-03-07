@@ -1933,7 +1933,7 @@ function setVisualState(phase, instant = false) {
         }
         srAnnounce(`${info.exercise.name}. Exercise ${info.exerciseNum} of ${state.exerciseObjects.length}.`);
         beep('work');
-        speak(info.exercise.name + ". Begin.");
+        speak(info.exercise.name + ", Begin.");
     }
 
     if (instant) { DOM.progressCircle.style.transition = ''; }
