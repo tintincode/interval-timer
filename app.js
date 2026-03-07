@@ -1991,11 +1991,9 @@ function nextPhase(isManualSkip = false) {
     // Cancel current loop frame to prevent double-fire
     cancelAnimationFrame(state.raf);
     
-    // If this is a natural transition (not a manual skip), the last second just ended.
-    // We need to decrement the total time to account for it before starting the next phase.
-    if (!isManualSkip && state.totalTimeRemaining > 0) {
-        state.totalTimeRemaining--;
-    }
+    // For natural transitions, the new phase starts exactly when the old one was scheduled to end.
+    // This prevents drift. For manual skips, it starts now.
+    const newPhaseBaseTime = isManualSkip ? Date.now() : state.phaseEndTime;
 
     // If skipping manually, deduct precise time left in current phase
     if (isManualSkip) {
@@ -2047,14 +2045,23 @@ function nextPhase(isManualSkip = false) {
     
     setVisualState(state.currentPhase, isManualSkip);
     DOM.timeLeftEl.innerText = formatTime(state.secondsRemaining);
+
+    // Force update total time display to ensure continuity (e.g. showing 5:00 between 5:01 and 4:59)
+    const now = Date.now();
+    const preciseTotalTime = state.workoutEndTime > 0 ? Math.max(0, (state.workoutEndTime - now) / 1000) : 0;
+    state.totalTimeRemaining = Math.ceil(preciseTotalTime);
+    updateTotalTimeDisplay(state.totalTimeRemaining);
+
     refillProgress();
     
     if (!state.isPaused) {
-        state.phaseEndTime = Date.now() + (state.totalPhaseSeconds * 1000);
+        state.phaseEndTime = newPhaseBaseTime + (state.totalPhaseSeconds * 1000);
         runTimerLoop();
     } else {
         // If paused, prepare the time for when we eventually resume
         state.pausedTimeRemainingMs = state.totalPhaseSeconds * 1000;
+        // Also update phaseEndTime so it's correct when we unpause.
+        state.phaseEndTime = newPhaseBaseTime + (state.totalPhaseSeconds * 1000);
     }
 }
 
@@ -2090,15 +2097,16 @@ async function startWorkout() {
     
     await wakeLockManager.enable();
     
+    const startTime = Date.now();
     const prep = getSecondsFromTimeInput('input-prepare');
     state.isPaused = false;
     state.currentPhase = prep > 0 ? 'prepare' : 'work';
     state.totalPhaseSeconds = prep > 0 ? prep : getIntervalData(0).exercise.duration;
     state.secondsRemaining = state.totalPhaseSeconds;
-    state.phaseEndTime = Date.now() + (state.totalPhaseSeconds * 1000);
+    state.phaseEndTime = startTime + (state.totalPhaseSeconds * 1000);
     state.totalTimeRemaining = calculateTotalTime(); // Initialize total countdown
     state.initialTotalTime = state.totalTimeRemaining; // Store initial total for progress bar
-    state.workoutEndTime = Date.now() + (state.initialTotalTime * 1000);
+    state.workoutEndTime = startTime + (state.initialTotalTime * 1000);
     state.lastProgressBarUpdateAt = 0;
     
     DOM.timeLeftEl.innerText = formatTime(state.secondsRemaining); 
