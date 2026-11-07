@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Interval Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;600&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.27/dist/vue.global.prod.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #e9edf0; --fg: #15202b; --panel: #ffffff; --line: #c5ced6; --muted: #52606d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; --bg: #11181f; --fg: #eef2f5; --panel: #1b252e; --line: #2f3d49; --muted: #9aa8b5; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark; --bg: #11181f; --fg: #eef2f5; --panel: #1b252e; --line: #2f3d49; --muted: #9aa8b5; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { background: var(--bg); color: var(--fg); font-family: 'Barlow', system-ui, sans-serif; min-height: 100vh; transition: background-color .25s; }
+  body[data-phase="prep"]  { --bg:#f0b429; --fg:#1d1500; --panel:rgba(255,255,255,.35); --line:rgba(0,0,0,.25); --muted:#4a3a08; }
+  body[data-phase="work"]  { --bg:#c42618; --fg:#ffffff; --panel:rgba(0,0,0,.18); --line:rgba(255,255,255,.4); --muted:#f7e1df; }
+  body[data-phase="rest"]  { --bg:#0d727b; --fg:#ffffff; --panel:rgba(0,0,0,.18); --line:rgba(255,255,255,.4); --muted:#ddebed; }
+  body[data-phase="done"]  { --bg:#2c754a; --fg:#ffffff; --panel:rgba(0,0,0,.18); --line:rgba(255,255,255,.4); --muted:#e1ece6; }
+  body[data-phase="warm"]  { --bg:#2764c6; --fg:#ffffff; --panel:rgba(0,0,0,.18); --line:rgba(255,255,255,.4); --muted:#e1e9f7; }
+  body[data-phase="cool"]  { --bg:#6b4fbb; --fg:#ffffff; --panel:rgba(0,0,0,.18); --line:rgba(255,255,255,.4); --muted:#eae6f5; }
+  .display { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-variant-numeric: tabular-nums; }
+  .btn { border: 2px solid var(--fg); border-radius: 999px; color: var(--fg); font-weight: 600; padding: .7rem 1.4rem; }
+  .btn-solid { background: var(--fg); color: var(--bg); }
+  .btn:focus-visible, .step:focus-visible, .chip:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+  .step { width: 2.5rem; height: 2.5rem; border: 2px solid var(--line); border-radius: 8px; font-size: 1.25rem; line-height: 1; }
+  .chip { border: 1.5px solid var(--line); border-radius: 8px; padding: .4rem .8rem; font-weight: 600; }
+  .chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .sw { position: relative; flex: none; width: 3rem; height: 1.8rem; border-radius: 999px; background: var(--line); transition: background-color .18s; }
+  .sw.on { background: #34c759; }
+  .sw .knob { position: absolute; top: .15rem; left: .15rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .18s; }
+  .sw.on .knob { transform: translateX(1.2rem); }
+  .sw:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+  .pill { display: inline-flex; border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .pill button { width: 2.9rem; height: 2.75rem; font-size: 1.25rem; line-height: 1; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .pill button + button { border-left: 1.5px solid var(--line); }
+  .pill button:active { background: var(--line); }
+  .pill button:focus-visible { outline: 3px solid var(--fg); outline-offset: -3px; }
+  .set-row { border-top: 1.5px solid var(--line); }
+  body { --label-size: 1.25rem; --clock-size: clamp(3.5rem, 16vw, 6rem); --sub-size: 1.125rem; --bar-h: .75rem; }
+  body:not([data-phase="idle"]) { --label-size: min(15vw, 9dvh, 9rem); --clock-size: min(46vw, 34dvh, 26rem); --sub-size: clamp(1.25rem, 4vw, 2.5rem); --bar-h: 1.25rem; }
+  body:not([data-phase="idle"]) .t-clock[data-long="true"] { --clock-size: min(36vw, 34dvh, 26rem); }
+  body:not([data-phase="idle"]) #app { max-width: 72rem; }
+  body:not([data-phase="idle"]) .t-meta { font-size: clamp(1rem, 2.6vw, 1.75rem); }
+  body:not([data-phase="idle"]) .btn { padding: .9rem clamp(1.1rem, 4vw, 2rem); font-size: 1.25rem; }
+  body:not([data-phase="idle"]) .t-btns { width: 100%; max-width: 32rem; }
+  body:not([data-phase="idle"]) .t-btns .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; }
+  @media (hover: none) { .t-hint { display: none; } }
+  /* Fit the screen: use the visible height (dvh) so the page never scrolls because of browser bars */
+  body { min-height: 0; }
+  #app { min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+  body:not([data-phase="idle"]) #app { padding-top: .75rem; padding-bottom: .75rem; }
+  /* Setup screen: one centred column with a compact summary; Start stays pinned at the bottom */
+  body[data-phase="idle"] .t-run { display: none; }
+  body[data-phase="idle"] #app > main { flex: none; padding: .5rem 0 1rem; }
+  body[data-phase="idle"] .t-start-main, body[data-phase="idle"] .t-btns { display: none; }
+  body[data-phase="idle"] .t-hint { margin-top: .5rem; }
+  .t-startbar { display: none; }
+  body[data-phase="idle"] .t-startbar { display: block; position: sticky; bottom: 0; z-index: 10; margin-top: auto; padding: .75rem 0 calc(.75rem + env(safe-area-inset-bottom, 0px)); background: var(--bg); }
+  /* Only on short, wide screens (a phone held sideways): two columns, Start on the left */
+  @media (min-width: 640px) and (max-height: 520px) {
+    body[data-phase="idle"] #app { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr); column-gap: 2rem; max-width: 64rem; height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); min-height: 0; padding-bottom: .75rem; overflow: hidden; }
+    body[data-phase="idle"] #app > header { grid-column: 1 / -1; margin-bottom: .75rem; }
+    body[data-phase="idle"] #app > main { grid-column: 1; grid-row: 2; align-self: start; padding-top: 1rem; }
+    body[data-phase="idle"] #app > section { grid-column: 2; grid-row: 2; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+    body[data-phase="idle"] .t-start-main { display: inline-block; }
+    body[data-phase="idle"] .t-btns { display: flex; }
+    body[data-phase="idle"] .t-startbar { display: none; }
+  }
+  /* Short screens such as a phone held sideways */
+  @media (max-height: 520px) {
+    body:not([data-phase="idle"]) { --label-size: min(15vw, 8dvh, 9rem); --clock-size: min(46vw, 26dvh, 26rem); --bar-h: .75rem; }
+    body:not([data-phase="idle"]) .t-clock[data-long="true"] { --clock-size: min(36vw, 26dvh, 26rem); }
+    body:not([data-phase="idle"]) .t-meta, body:not([data-phase="idle"]) .t-hint { display: none; }
+    body:not([data-phase="idle"]) .t-btns { margin-top: .75rem; }
+    body:not([data-phase="idle"]) .btn { padding: .5rem 1.25rem; font-size: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body data-phase="idle">
+<div id="app" class="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
+
+  <header class="flex items-center justify-between">
+    <h1 class="display text-2xl font-bold tracking-wide">Interval Timer</h1>
+    <div class="relative flex gap-2" data-sound>
+    <button class="step flex items-center justify-center" style="width: 2.75rem; height: 2.75rem; border-radius: 999px" @click="showSound = !showSound" :aria-expanded="showSound" title="Settings" aria-label="Settings">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="step flex items-center justify-center" style="width: 2.75rem; height: 2.75rem; border-radius: 999px" @click="toggleMute" :aria-pressed="muted" :aria-label="muted ? 'Unmute sound' : 'Mute all sound'">
+      <svg v-if="!muted" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg>
+    </button>
+    <div v-if="showSound" class="absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl p-3" style="max-height: 80vh; overflow-y: auto; background: var(--bg); border: 1.5px solid var(--line); box-shadow: 0 10px 24px rgba(0,0,0,.25)" role="dialog" aria-label="Settings">
+      <label class="flex items-center justify-between py-2">
+        <span class="font-semibold">Beeps</span>
+        <button type="button" role="switch" class="sw" :class="{on: sound}" :aria-checked="sound" aria-label="Beeps" @click="toggleSound"><span class="knob"></span></button>
+      </label>
+      <label v-if="hasVoice" class="flex items-center justify-between py-2">
+        <span class="font-semibold">Voice announcements</span>
+        <button type="button" role="switch" class="sw" :class="{on: voice}" :aria-checked="voice" aria-label="Voice announcements" @click="toggleVoice"><span class="knob"></span></button>
+      </label>
+      <p v-if="muted" class="text-xs" style="color: var(--muted)">All sound is muted. Tap the speaker icon to unmute.</p>
+      <div v-if="phase === 'idle'" class="mt-2 pt-3" style="border-top: 1.5px solid var(--line)">
+        <p class="mb-2 font-semibold">Share and backup</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="chip w-full text-center" @click="copyText(true)">Export</button>
+          <button class="chip w-full text-center" :class="{on: showImport}" @click="showImport = !showImport; shareMsg = ''">Import</button>
+        </div>
+        <textarea v-if="shareText" readonly rows="3" :value="shareText" @focus="$event.target.select()" aria-label="Workout text to copy" class="mt-2 w-full rounded-lg px-3 py-2 text-xs" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)"></textarea>
+        <textarea v-if="showImport" v-model="importText" rows="2" placeholder="Paste workout text here" aria-label="Paste workout text" class="mt-3 w-full rounded-lg px-3 py-2 text-xs" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)"></textarea>
+        <div v-if="showImport" class="mt-2">
+          <button class="chip w-full text-center" @click="importPasted">Add</button>
+          <button class="mt-2 block w-full text-center text-sm underline" style="color: var(--muted)" @click="fileEl.click()">or choose a file</button>
+        </div>
+        <input ref="fileEl" type="file" accept=".json,.txt,application/json,text/plain" class="hidden" @change="onFile">
+        <p v-if="shareMsg" class="mt-2 text-xs" role="status" style="color: var(--muted)">{{ shareMsg }}</p>
+      </div>
+    </div>
+    </div>
+  </header>
+
+  <!-- Timer face -->
+  <main class="flex flex-1 flex-col items-center justify-center text-center">
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
+    <p class="display font-extrabold uppercase leading-none" style="font-size: var(--label-size)">{{ label }}</p>
+    <p class="t-clock display font-extrabold leading-none" :data-long="clock.length > 4" style="font-size: var(--clock-size)">{{ clock }}</p>
+    <p class="mt-1 text-lg" style="color: var(--muted); font-size: var(--sub-size)">{{ sub }}</p>
+
+    <div class="t-run mt-6 w-full overflow-hidden rounded-full" style="background: var(--panel); height: var(--bar-h)" role="progressbar" aria-label="Workout progress" :aria-valuenow="Math.round(progress*100)" aria-valuemin="0" aria-valuemax="100">
+      <div class="h-full rounded-full" style="background: var(--fg)" :style="{ width: (progress*100) + '%', transition: running ? 'width 1s linear' : 'none' }"></div>
+    </div>
+    <div class="t-run t-meta mt-3 flex w-full justify-between text-sm" style="color: var(--muted)">
+      <span>Elapsed {{ fmt(elapsedTotal) }}</span>
+      <span>Total {{ fmt(totalMs) }}</span>
+    </div>
+
+    <div class="t-btns mt-8 flex flex-wrap items-center justify-center gap-3">
+      <button v-if="phase==='idle'" class="t-start-main btn btn-solid text-xl px-10" @click="start">Start workout</button>
+      <template v-else-if="phase==='done'">
+        <button class="btn btn-solid" @click="again">Do it again</button>
+        <button class="btn" @click="reset">Back to setup</button>
+      </template>
+      <template v-else>
+        <button class="btn btn-solid px-8" @click="running ? pause() : resume()">{{ running ? 'Pause' : 'Resume' }}</button>
+        <button class="btn" @click="skip">Skip</button>
+        <button class="btn" @click="reset">Stop</button>
+      </template>
+    </div>
+    <p class="t-hint mt-3 text-xs" style="color: var(--muted)">Keys: Space start or pause, S skip, Esc stop, M mute.</p>
+  </main>
+
+  <!-- Settings -->
+  <section v-if="phase==='idle'" class="rounded-2xl p-4" style="background: var(--panel); border: 1.5px solid var(--line)">
+    <p v-if="saveFailed" class="mb-3 rounded-lg px-3 py-2 text-sm" role="alert" style="border: 1.5px solid #e5392a">Your browser is blocking saving, so your workouts won’t be kept after you close this page. Use Settings, then Export, to back them up.</p>
+    <div class="relative mb-3" data-wmenu>
+      <div class="flex items-center gap-2">
+        <input v-model="curWorkout.name" data-wname maxlength="30" placeholder="Workout name" aria-label="Workout name" @keydown.enter="$event.target.blur()" class="min-w-0 flex-1 rounded-lg px-3 py-2 font-semibold" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)">
+        <button class="step" style="width: 2.75rem" :aria-expanded="showWorkouts" aria-label="Saved workouts" title="Saved workouts" @click="showWorkouts = !showWorkouts; confirmDel = ''">▾</button>
+      </div>
+      <div v-if="showWorkouts" class="absolute left-0 right-0 top-full z-20 mt-2 rounded-2xl p-2" style="max-height: 70vh; overflow-y: auto; background: var(--bg); border: 1.5px solid var(--line); box-shadow: 0 10px 24px rgba(0,0,0,.25)">
+        <div v-for="w in workouts" :key="w.id" class="mb-1 flex items-center gap-2">
+          <button class="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-left" :class="{ 'font-bold': w.id === currentId }" @click="selectWorkout(w.id)">{{ w.id === currentId ? '✓ ' : '' }}{{ w.name.trim() || 'Untitled' }}</button>
+          <button class="step px-2" :style="confirmDel === w.id ? { border: 'none', width: 'auto', minWidth: '2.5rem', height: '2.25rem', padding: '0 .9rem', borderRadius: '999px', background: '#d32f2f', color: '#fff', fontSize: '.85rem', fontWeight: 600 } : { border: 'none' }" :aria-label="'Delete ' + (w.name.trim() || 'Untitled')" @click="deleteWorkout(w.id)">{{ confirmDel === w.id ? 'Delete?' : '×' }}</button>
+        </div>
+        <div class="mt-1 grid grid-cols-2 gap-2 pt-2" style="border-top: 1.5px solid var(--line)">
+          <button class="chip w-full text-center" @click="newWorkout">+ New</button>
+          <button class="chip w-full text-center" @click="duplicateWorkout">Duplicate</button>
+        </div>
+      </div>
+    </div>
+    <div v-for="f in fields" :key="f.key" class="set-row flex items-center justify-between py-3">
+      <span class="font-semibold">{{ f.label }}</span>
+      <div class="flex items-center gap-3">
+        <span class="display w-14 text-right text-2xl font-bold">{{ f.secs ? fmt(cfg[f.key]*1000) : cfg[f.key] }}</span>
+        <div class="pill" role="group" :aria-label="f.label">
+          <button :aria-label="'Decrease ' + f.label" v-on="stepper(() => bump(f, -1))">−</button>
+          <button :aria-label="'Increase ' + f.label" v-on="stepper(() => bump(f, 1))">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 pt-3" style="border-top: 1.5px solid var(--line)">
+      <p class="mb-2 font-semibold">Exercises in one round</p>
+      <div v-for="(ex, i) in exercises" :key="ex.id">
+      <div data-exrow :style="rowStyle(i)" class="mb-2 flex items-center gap-2">
+        <div class="relative min-w-0 flex-1">
+          <input v-model="ex.name" data-exinput placeholder="Exercise name" @keydown.enter="$event.target.blur()" maxlength="30" :aria-label="'Exercise ' + (i + 1)" class="w-full rounded-lg py-2 pl-3" :style="{ paddingRight: exPad(ex) }" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)">
+          <button class="absolute top-0 flex h-full items-center justify-center text-xs font-semibold" data-extime style="right: 2.5rem; padding: 0 .4rem; color: var(--muted)" :aria-expanded="openEx === ex.id" :aria-label="'Set times for ' + (ex.name.trim() || 'exercise ' + (i + 1)) + (exBadge(ex) ? ', currently ' + exBadge(ex) : ', currently using the defaults')" @click="toggleEx(ex.id)">
+            <span v-if="exBadge(ex)" class="rounded px-2 py-0.5" style="background: var(--fg); color: var(--bg)">{{ exBadge(ex) }}</span>
+            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </button>
+          <button class="absolute right-0 top-0 flex h-full cursor-grab select-none items-center justify-center text-2xl" style="touch-action: none; width: 2.5rem; color: var(--muted)" :aria-label="'Reorder exercise ' + (i + 1) + '. Drag, or use the up and down arrow keys.'" @pointerdown="startDrag($event, i)" @keydown.up.prevent="moveEx(i, -1)" @keydown.down.prevent="moveEx(i, 1)">≡</button>
+        </div>
+        <button class="step" :aria-label="'Remove exercise ' + (i + 1)" @click="removeEx(i)">×</button>
+      </div>
+      <div v-if="openEx === ex.id" data-expanel class="mb-2 rounded-lg px-3 pb-2" style="background: var(--bg); border: 1.5px solid var(--line)">
+        <div v-for="t in exFields" :key="t.key" class="flex items-center justify-between py-2" :style="t.key === 'rest' ? 'border-top: 1.5px solid var(--line)' : ''">
+          <span class="font-semibold">{{ t.label }}</span>
+          <div class="flex items-center gap-3">
+            <span class="flex items-baseline">
+              <input type="number" inputmode="numeric" :min="t.min" :max="300" step="5" :value="exEff(ex, t.key)" @change="setEx(ex, t.key, $event.target.value, $event.target)" :aria-label="t.label + ' in seconds'" class="display w-14 bg-transparent text-right text-2xl font-bold" :style="{ color: ex[t.key] == null ? 'var(--muted)' : 'var(--fg)' }">
+              <span class="ml-0.5 text-sm" style="color: var(--muted)">s</span>
+            </span>
+            <div class="pill" role="group" :aria-label="t.label">
+              <button :aria-label="'Decrease ' + t.label" v-on="stepper(() => stepEx(ex, t.key, -1))">−</button>
+              <button :aria-label="'Increase ' + t.label" v-on="stepper(() => stepEx(ex, t.key, 1))">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs" style="color: var(--muted)">
+          <span>Greyed number is the default ({{ cfg.work }}s)</span>
+          <button v-if="ex.work != null" class="underline" @click="useDefaults(ex)">Use defaults</button>
+        </div>
+        <button class="chip mt-2 w-full text-center" @click="openEx = null">Done</button>
+      </div>
+      </div>
+      <button class="chip w-full text-center" @click="addEx">Add exercise</button>
+    </div>
+    <div v-for="b in blockDefs" :key="b.key" class="mt-3 pt-3" style="border-top: 1.5px solid var(--line)">
+      <div class="flex items-center justify-between gap-2">
+        <button class="min-w-0 flex-1 text-left" :aria-expanded="open[b.key]" @click="open[b.key] = !open[b.key]">
+          <span class="font-semibold">{{ b.label }} {{ open[b.key] ? '▾' : '▸' }}</span>
+          <span class="block text-sm" style="color: var(--muted)">{{ blockSummary(b.key) }}</span>
+        </button>
+        <button type="button" role="switch" class="sw" :class="{on: blocks[b.key].on}" :aria-checked="blocks[b.key].on" :aria-label="b.label" @click="toggleBlock(b.key)"><span class="knob"></span></button>
+      </div>
+      <div v-if="open[b.key]" class="mt-3">
+        <div v-for="(it, i) in blocks[b.key].items" :key="it.id" class="mb-2 flex items-center gap-2">
+          <input v-model="it.name" maxlength="30" placeholder="Exercise name" :aria-label="b.label + ' exercise ' + (i + 1)" class="min-w-0 flex-1 rounded-lg px-3 py-2" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)">
+          <input v-model.number="it.secs" type="number" inputmode="numeric" min="5" max="600" step="5" @change="clampItem(it)" :aria-label="'Seconds for ' + b.label + ' exercise ' + (i + 1)" class="w-16 rounded-lg px-2 py-2 text-center" style="background: var(--bg); color: var(--fg); border: 1.5px solid var(--line)">
+          <button class="step" :aria-label="'Remove ' + b.label + ' exercise ' + (i + 1)" @click="removeItem(b.key, i)">×</button>
+        </div>
+        <button class="chip w-full text-center" @click="addItem(b.key)">Add exercise</button>
+        <p class="mt-2 text-xs" style="color: var(--muted)">Times are in seconds. Exercises run one after another with no rest.</p>
+      </div>
+    </div>
+  </section>
+  <div v-if="phase==='idle'" class="t-startbar"><button class="btn btn-solid w-full text-xl" @click="start">Start workout</button></div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed, watch, onMounted, onBeforeUnmount } = Vue;
+
+createApp({
+  setup() {
+    const fields = [
+      { key: 'prep', label: 'Get ready', min: 0, max: 60, step: 5, secs: true },
+      { key: 'work', label: 'Work', min: 5, max: 300, step: 5, secs: true },
+      { key: 'rest', label: 'Rest', min: 0, max: 300, step: 5, secs: true },
+      { key: 'rounds', label: 'Rounds', min: 1, max: 20, step: 1, secs: false },
+    ];
+
+    // ===== Settings and saved state =====
+    const cfg = reactive({ prep: 10, work: 30, rest: 15, rounds: 4 });
+    const sound = ref(true);
+    const voice = ref(true);
+    const muted = ref(false);
+    const showSound = ref(false);
+    const hasVoice = 'speechSynthesis' in window;
+    try {
+      const saved = JSON.parse(localStorage.getItem('hiit-cfg2') || 'null');
+      if (saved) { fields.forEach(f => { if (Number.isFinite(saved[f.key])) cfg[f.key] = saved[f.key]; }); }
+      if (localStorage.getItem('hiit-sound') === '0') sound.value = false;
+      if (localStorage.getItem('hiit-voice') === '0') voice.value = false;
+      if (localStorage.getItem('hiit-muted') === '1') muted.value = true;
+    } catch (e) {}
+
+    // ===== Exercises =====
+    let nextId = 0;
+    // An exercise can override the default work time; null means "use the default"
+    const makeExercise = (n, work = null) => ({ id: ++nextId, name: n, work });
+    const unpackEx = x => (x && typeof x === 'object') ? makeExercise(String(x.name || ''), x.work != null && Number.isFinite(Number(x.work)) ? Number(x.work) : null) : makeExercise(String(x == null ? '' : x));
+    // Saved as a plain name when it uses the defaults, so those workouts stay readable by older copies of the page
+    const packEx = e => e.work == null ? e.name : { name: e.name, work: e.work };
+    const openEx = ref(null);
+    const exFields = [{ key: 'work', label: 'Work', min: 5 }];
+    const exercises = ref(['Jumping jacks', 'Push-ups', 'Crunches', 'Crawl', 'Squats', 'Mountain climbers'].map(unpackEx));
+    try {
+      const s = JSON.parse(localStorage.getItem('hiit-ex') || 'null');
+      if (Array.isArray(s) && s.length) exercises.value = s.map(unpackEx);
+    } catch (e) {}
+    const exName = i => (exercises.value[i] && exercises.value[i].name.trim()) || ('Exercise ' + (i + 1));
+    function addEx() { exercises.value.push(makeExercise('')); Vue.nextTick(() => { const els = document.querySelectorAll('[data-exinput]'); if (els.length) els[els.length - 1].focus(); }); }
+    const fmtS = n => n >= 60 ? Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0') : n + 's';
+    function exBadge(ex) { return ex.work != null ? fmtS(ex.work) : ''; }
+    function exPad(ex) { const b = exBadge(ex); return (2.7 + (b ? b.length * 0.5 + 1.2 : 2.2)) + 'rem'; }
+    function exEff(ex, key) { return ex[key] != null ? ex[key] : cfg[key]; }
+    function stepEx(ex, key, dir) { const lo = key === 'work' ? 5 : 0; ex[key] = Math.min(300, Math.max(lo, exEff(ex, key) + dir * 5)); }
+    function setEx(ex, key, raw, el) {
+      const lo = key === 'work' ? 5 : 0;
+      const v = Math.round(Number(raw));
+      if (String(raw).trim() !== '' && Number.isFinite(v)) ex[key] = Math.min(300, Math.max(lo, v));
+      if (el) el.value = exEff(ex, key);
+    }
+    function useDefaults(ex) { ex.work = null; }
+    function toggleEx(id) { openEx.value = openEx.value === id ? null : id; }
+    // Tap to step once; press and hold to keep stepping
+    let holdTimer = null, holdRepeat = null, heldFired = false;
+    function clearHold() { clearTimeout(holdTimer); clearInterval(holdRepeat); holdTimer = holdRepeat = null; }
+    function stepper(fn) {
+      return {
+        pointerdown: e => { if (e.button > 0) return; clearHold(); heldFired = false; holdTimer = setTimeout(() => { heldFired = true; fn(); holdRepeat = setInterval(fn, 80); }, 450); },
+        pointerup: () => { clearHold(); if (heldFired) setTimeout(() => { heldFired = false; }, 60); },
+        pointerleave: clearHold,
+        pointercancel: clearHold,
+        contextmenu: e => e.preventDefault(),
+        click: () => { if (heldFired) { heldFired = false; return; } fn(); }
+      };
+    }
+    function removeEx(i) { if (exercises.value.length > 1) exercises.value.splice(i, 1); }
+    function moveEx(i, d) { const a = exercises.value, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; }
+
+    // ===== Saved workouts, warm-up and cool-down blocks =====
+    // Saved workouts: edits to the settings and exercises save into the selected workout automatically
+    let idCounter = 0;
+    const uid = () => 'w' + Date.now().toString(36) + (++idCounter);
+    const workouts = ref([]);
+    const currentId = ref('');
+    const showWorkouts = ref(false);
+    const confirmDel = ref('');
+    const blocks = reactive({ warm: { on: false, items: [] }, cool: { on: false, items: [] } });
+    const blockDefs = [{ key: 'warm', label: 'Warm-up' }, { key: 'cool', label: 'Cool-down' }];
+    const open = reactive({ warm: false, cool: false });
+    const packBlock = k => ({ on: blocks[k].on, items: blocks[k].items.map(it => ({ name: it.name, secs: it.secs })) });
+    function unpackBlock(k, b) {
+      const items = b && Array.isArray(b.items) ? b.items : [];
+      blocks[k].on = !!(b && b.on);
+      blocks[k].items = items.map(it => ({ id: ++nextId, name: String(it.name || ''), secs: Number.isFinite(it.secs) ? it.secs : 30 }));
+    }
+    const curWorkout = computed(() => workouts.value.find(w => w.id === currentId.value) || workouts.value[0]);
+    const snapshot = name => ({ id: uid(), name, cfg: { prep: cfg.prep, work: cfg.work, rest: cfg.rest, rounds: cfg.rounds }, exercises: exercises.value.map(packEx), warm: packBlock('warm'), cool: packBlock('cool') });
+    function loadInto(w) {
+      fields.forEach(f => { const v = w.cfg && w.cfg[f.key]; if (Number.isFinite(v)) cfg[f.key] = v; });
+      const names = Array.isArray(w.exercises) && w.exercises.length ? w.exercises : [''];
+      openEx.value = null;
+      exercises.value = names.map(unpackEx);
+      unpackBlock('warm', w.warm);
+      unpackBlock('cool', w.cool);
+    }
+    // Cleaning helpers (used for stored workouts and for imports)
+    const clampNum = (v, lo, hi, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; };
+    function cleanBlock(b) {
+      const items = b && Array.isArray(b.items) ? b.items.slice(0, 30) : [];
+      return { on: !!(b && b.on), items: items.map(it => ({ name: String((it && it.name) || '').slice(0, 30), secs: clampNum(it && it.secs, 5, 600, 30) })) };
+    }
+    function cleanEx(x) {
+      if (x && typeof x === 'object') {
+        const out = { name: String(x.name || '').slice(0, 30) };
+        if (x.work != null && Number.isFinite(Number(x.work))) out.work = clampNum(x.work, 5, 300, 30);
+        return out.work == null ? out.name : out;
+      }
+      return String(x == null ? '' : x).slice(0, 30);
+    }
+    function cleanWorkout(o) {
+      const d = { prep: 10, work: 30, rest: 15, rounds: 4 };
+      const c = (o && o.cfg) || {};
+      const ex = o && Array.isArray(o.exercises) ? o.exercises.slice(0, 30).map(cleanEx) : [];
+      const out = { name: String((o && o.name) || 'Imported').slice(0, 30), cfg: {}, exercises: ex.length ? ex : [''], warm: cleanBlock(o && o.warm), cool: cleanBlock(o && o.cool) };
+      fields.forEach(f => { out.cfg[f.key] = clampNum(c[f.key], f.min, f.max, d[f.key]); });
+      return out;
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem('hiit-workouts') || 'null');
+      if (saved && Array.isArray(saved.list) && saved.list.length) {
+        const seen = new Set();
+        workouts.value = saved.list.slice(0, 100).map(w => { const c = cleanWorkout(w); c.id = (w && typeof w.id === 'string' && w.id && !seen.has(w.id)) ? w.id : uid(); seen.add(c.id); return c; });
+        currentId.value = workouts.value.some(x => x.id === saved.current) ? saved.current : workouts.value[0].id;
+        loadInto(curWorkout.value);
+      }
+    } catch (e) {}
+    if (!workouts.value.length) { const first = snapshot('My workout'); workouts.value = [first]; currentId.value = first.id; }
+    const saveFailed = ref(false);
+    function persist() { try { localStorage.setItem('hiit-workouts', JSON.stringify({ list: workouts.value, current: currentId.value })); saveFailed.value = false; } catch (e) { saveFailed.value = true; } }
+    function sync() {
+      const w = curWorkout.value;
+      if (!w) return;
+      w.cfg = { prep: cfg.prep, work: cfg.work, rest: cfg.rest, rounds: cfg.rounds };
+      w.exercises = exercises.value.map(packEx);
+      w.warm = packBlock('warm');
+      w.cool = packBlock('cool');
+    }
+    watch(cfg, sync);
+    watch(exercises, sync, { deep: true });
+    watch(blocks, sync, { deep: true });
+    watch(workouts, persist, { deep: true });
+    watch(currentId, persist);
+    persist();
+    // The old storage keys were only needed to carry settings over once
+    if (!saveFailed.value) { try { localStorage.removeItem('hiit-cfg2'); localStorage.removeItem('hiit-ex'); } catch (e) {} }
+    function addItem(k) { blocks[k].items.push({ id: ++nextId, name: '', secs: 30 }); }
+    function removeItem(k, i) { blocks[k].items.splice(i, 1); }
+    function clampItem(it) { const v = Math.round(Number(it.secs)); it.secs = Number.isFinite(v) && v > 0 ? Math.min(600, Math.max(5, v)) : 30; }
+    function toggleBlock(k) { const b = blocks[k]; b.on = !b.on; if (b.on && !b.items.length) addItem(k); if (b.on) open[k] = true; else open[k] = false; }
+    function blockSummary(k) {
+      const b = blocks[k];
+      if (!b.on) return 'Off';
+      if (!b.items.length) return 'Add an exercise';
+      const s = b.items.reduce((a, it) => a + (Number(it.secs) || 0), 0);
+      return b.items.length + (b.items.length === 1 ? ' exercise' : ' exercises') + ' · ' + fmt(s * 1000);
+    }
+    // ===== Share and backup =====
+    // Share and backup: workouts become text (HIIT1:...) or a .json file; import accepts both
+    const showImport = ref(false);
+    const shareText = ref('');
+    const shareMsg = ref('');
+    let msgTimer = null;
+    const stamp = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    watch(shareMsg, v => { clearTimeout(msgTimer); if (v) msgTimer = setTimeout(() => { shareMsg.value = ''; }, 6000); });
+    const importText = ref('');
+    const fileEl = ref(null);
+    const b64enc = s => { let bin = ''; new TextEncoder().encode(s).forEach(x => { bin += String.fromCharCode(x); }); return btoa(bin); };
+    const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s), ch => ch.charCodeAt(0)));
+    function exportJson(all) { sync(); const list = all ? workouts.value : [curWorkout.value]; return JSON.stringify({ app: 'hiit-timer', v: 1, workouts: list.map(w => cleanWorkout(w)) }); }
+    async function copyText(all) {
+      const text = 'HIIT1:' + b64enc(exportJson(all));
+      shareText.value = '';
+      try { await navigator.clipboard.writeText(text); shareMsg.value = 'Copied ' + workouts.value.length + (workouts.value.length === 1 ? ' workout' : ' workouts') + ' at ' + stamp() + '. Paste it into a message or note, then use Import on the other device.'; }
+      catch (e) { shareText.value = text; shareMsg.value = 'Copy was blocked here. Select the text below and copy it by hand.'; }
+    }
+    function importFrom(raw) {
+      let data;
+      try {
+        let t = String(raw || '').trim();
+        if (!t) { shareMsg.value = 'Nothing to add. Paste workout text first.'; return; }
+        if (t.startsWith('HIIT1:')) t = b64dec(t.slice(6).replace(/\s+/g, ''));
+        data = JSON.parse(t);
+      } catch (e) { shareMsg.value = 'That does not look like workout text from this app.'; return; }
+      const list = data && Array.isArray(data.workouts) ? data.workouts.slice(0, 50) : [];
+      if (!list.length) { shareMsg.value = 'No workouts found in that text.'; return; }
+      const names = new Set(workouts.value.map(w => (w.name || '').trim().toLowerCase()));
+      const added = [];
+      list.forEach(o => {
+        const w = cleanWorkout(o);
+        const base = (w.name.trim() || 'Imported').slice(0, 24);
+        let nm = base, n = 2;
+        while (names.has(nm.toLowerCase())) nm = base + ' (' + (n++) + ')';
+        names.add(nm.toLowerCase());
+        w.name = nm;
+        added.push(nm);
+        w.id = uid();
+        workouts.value.push(w);
+      });
+      importText.value = '';
+      showImport.value = false;
+      shareMsg.value = 'Added ' + added.join(', ') + ' at ' + stamp() + '. Find it in the saved-workouts list.';
+    }
+    function importPasted() { importFrom(importText.value); }
+    function onFile(e) {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (f.size > 1000000) { shareMsg.value = 'That file is too large.'; return; }
+      const r = new FileReader();
+      r.onload = () => importFrom(r.result);
+      r.onerror = () => { shareMsg.value = 'Could not read that file.'; };
+      r.readAsText(f);
+      e.target.value = '';
+    }
+    function selectWorkout(id) { currentId.value = id; loadInto(curWorkout.value); showWorkouts.value = false; confirmDel.value = ''; }
+    function newWorkout() {
+      const f = { id: uid(), name: 'New workout', cfg: { prep: 10, work: 30, rest: 15, rounds: 4 }, exercises: [''], warm: { on: false, items: [] }, cool: { on: false, items: [] } };
+      workouts.value.push(f);
+      selectWorkout(f.id);
+      Vue.nextTick(() => { const el = document.querySelector('[data-wname]'); if (el) { el.focus(); el.select(); } });
+    }
+    function duplicateWorkout() {
+      const c = curWorkout.value;
+      const f = { id: uid(), name: ((c.name || '').trim() || 'Workout') + ' copy', cfg: { ...c.cfg }, exercises: JSON.parse(JSON.stringify(c.exercises)), warm: JSON.parse(JSON.stringify(c.warm || { on: false, items: [] })), cool: JSON.parse(JSON.stringify(c.cool || { on: false, items: [] })) };
+      workouts.value.push(f);
+      selectWorkout(f.id);
+    }
+    function deleteWorkout(id) {
+      if (confirmDel.value !== id) { confirmDel.value = id; return; }
+      if (workouts.value.length <= 1) {
+        const w = workouts.value[0];
+        w.name = 'My workout';
+        w.cfg = { prep: 10, work: 30, rest: 15, rounds: 4 };
+        w.exercises = [''];
+        w.warm = { on: false, items: [] };
+        w.cool = { on: false, items: [] };
+        confirmDel.value = '';
+        loadInto(w);
+        showWorkouts.value = false;
+        return;
+      }
+      const i = workouts.value.findIndex(w => w.id === id);
+      const wasCurrent = currentId.value === id;
+      workouts.value.splice(i, 1);
+      confirmDel.value = '';
+      if (wasCurrent) selectWorkout(workouts.value[Math.max(0, i - 1)].id);
+    }
+
+    // ===== Drag to reorder =====
+    // Drag to reorder: the dragged row follows the pointer; the order changes on release
+    const drag = ref(null);
+    function startDrag(e, i) {
+      if (e.button > 0) return;
+      e.preventDefault();
+      if (openEx.value === null) return beginDrag(e, i, 0);
+      const row = document.querySelectorAll('[data-exrow]')[i];
+      const before = row.getBoundingClientRect().top;
+      openEx.value = null;
+      Vue.nextTick(() => beginDrag(e, i, before - row.getBoundingClientRect().top));
+    }
+    function beginDrag(e, i, offset) {
+      const rects = [...document.querySelectorAll('[data-exrow]')].map(r => { const b = r.getBoundingClientRect(); return { top: b.top, bottom: b.bottom }; });
+      const startY = e.clientY;
+      const from = i;
+      const stride = rects.length > 1 ? rects[1].top - rects[0].top : rects[0].bottom - rects[0].top + 8;
+      drag.value = { from, to: from, dy: offset, stride };
+      const move = ev => {
+        let to = drag.value ? drag.value.to : from;
+        if (ev.clientY < rects[0].top) to = 0;
+        else if (ev.clientY > rects[rects.length - 1].bottom) to = rects.length - 1;
+        else rects.forEach((b, k) => { if (ev.clientY >= b.top && ev.clientY <= b.bottom) to = k; });
+        drag.value = { from, to, dy: ev.clientY - startY + offset, stride };
+      };
+      const end = ev => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', end);
+        window.removeEventListener('pointercancel', end);
+        window.removeEventListener('keydown', key);
+        const d = drag.value; drag.value = null;
+        if (d && ev.type === 'pointerup' && d.to !== d.from) { const a = exercises.value; const [m] = a.splice(d.from, 1); a.splice(d.to, 0, m); }
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', end);
+      const key = ev => { if (ev.key === 'Escape') end({ type: 'cancel' }); };
+      window.addEventListener('pointercancel', end);
+      window.addEventListener('keydown', key);
+    }
+    function rowStyle(i) {
+      const d = drag.value;
+      if (!d) return null;
+      if (d.from === i) return { transform: 'translateY(' + d.dy + 'px) scale(1.03)', position: 'relative', zIndex: 5, background: 'var(--panel)', boxShadow: '0 0 0 6px var(--panel), 0 10px 24px rgba(0,0,0,.35)', borderRadius: '10px' };
+      let shift = 0;
+      if (d.from < d.to && i > d.from && i <= d.to) shift = -d.stride;
+      if (d.from > d.to && i >= d.to && i < d.from) shift = d.stride;
+      return { transform: 'translateY(' + shift + 'px)', transition: 'transform .15s ease' };
+    }
+
+    // ===== Timeline and display text =====
+    // Timeline of phases built from settings
+    const timeline = computed(() => {
+      const t = [];
+      const n = exercises.value.length;
+      const addBlock = (k, type, label) => {
+        const b = blocks[k];
+        if (!b.on) return;
+        b.items.forEach((it, m) => t.push({ type, ms: Math.max(1, Number(it.secs) || 30) * 1000, round: 0, name: (it.name || '').trim() || (label + ' ' + (m + 1)), n: m + 1, count: b.items.length }));
+      };
+      if (cfg.prep > 0) t.push({ type: 'prep', ms: cfg.prep * 1000, round: 0, ex: 0 });
+      addBlock('warm', 'warm', 'Warm-up');
+      for (let r = 1; r <= cfg.rounds; r++) {
+        for (let e = 0; e < n; e++) {
+          const workS = exEff(exercises.value[e], 'work'), restS = cfg.rest;
+          t.push({ type: 'work', ms: workS * 1000, round: r, ex: e });
+          const last = r === cfg.rounds && e === n - 1;
+          if (restS > 0 && !last) t.push({ type: 'rest', ms: restS * 1000, round: r, ex: e });
+        }
+      }
+      addBlock('cool', 'cool', 'Cool-down');
+      return t;
+    });
+    const totalMs = computed(() => timeline.value.reduce((a, p) => a + p.ms, 0));
+
+    const idx = ref(-1);          // -1 idle, timeline.length = done
+    const remaining = ref(0);     // ms left in current phase
+    const running = ref(false);
+    let endAt = 0, timer = null, lastWhole = null;
+
+    const phase = computed(() => idx.value < 0 ? 'idle' : idx.value >= timeline.value.length ? 'done' : timeline.value[idx.value].type);
+    const current = computed(() => timeline.value[idx.value]);
+
+    const nameOf = p => p.type === 'work' ? exName(p.ex) : p.name;
+    const label = computed(() => ['work', 'warm', 'cool'].includes(phase.value) ? nameOf(current.value) : ({ idle: 'Workout time', prep: 'Get ready', rest: 'Rest', done: 'Done' }[phase.value]));
+    // Read out to screen readers only when the interval changes, not every second
+    const announcement = computed(() => {
+      if (phase.value === 'idle') return '';
+      if (phase.value === 'done') return 'Workout complete';
+      return label.value + ', ' + Math.round(current.value.ms / 1000) + ' seconds';
+    });
+    const clock = computed(() => {
+      if (phase.value === 'idle') return fmt(totalMs.value);
+      if (phase.value === 'done') return '0:00';
+      return fmt(Math.ceil(remaining.value / 1000) * 1000);
+    });
+    const sub = computed(() => {
+      if (phase.value === 'idle') return exercises.value.length + (exercises.value.length === 1 ? ' exercise' : ' exercises') + ' × ' + cfg.rounds + (cfg.rounds === 1 ? ' round' : ' rounds');
+      if (phase.value === 'done') return cfg.rounds + ' rounds finished. Nice work.';
+      if (phase.value === 'prep') return 'First up: ' + nameOf(timeline.value[1]);
+      const next = timeline.value[idx.value + 1];
+      const nextTxt = next ? 'Next: ' + (next.type === 'rest' ? 'rest' : nameOf(next)) : 'Last exercise';
+      if (current.value.type === 'warm' || current.value.type === 'cool') return (current.value.type === 'warm' ? 'Warm-up ' : 'Cool-down ') + current.value.n + ' of ' + current.value.count + ' · ' + nextTxt;
+      return 'Round ' + current.value.round + ' of ' + cfg.rounds + ' · ' + nextTxt;
+    });
+
+    const elapsedTotal = computed(() => {
+      if (phase.value === 'idle') return 0;
+      if (phase.value === 'done') return totalMs.value;
+      let done = 0;
+      for (let i = 0; i < idx.value; i++) done += timeline.value[i].ms;
+      return done + (current.value.ms - remaining.value);
+    });
+    const progress = computed(() => totalMs.value ? elapsedTotal.value / totalMs.value : 0);
+
+    function fmt(ms) {
+      const s = Math.max(0, Math.round(ms / 1000));
+      return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    // ===== Sound, voice and screen wake lock =====
+    // Audio
+    let ctx = null;
+    function beep(freq, dur) {
+      if (!sound.value || muted.value) return;
+      try {
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + dur + 0.02);
+      } catch (e) {}
+    }
+    // Spoken announcements
+    let speakTimer = null;
+    function quiet() { clearTimeout(speakTimer); try { if (hasVoice) speechSynthesis.cancel(); } catch (e) {} }
+    function say(text, delay) {
+      quiet();
+      if (!hasVoice || !voice.value || muted.value) return;
+      speakTimer = setTimeout(() => { try { speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch (e) {} }, delay);
+    }
+    function speakPhase(i) {
+      const t = timeline.value;
+      if (i >= t.length) return say('Workout complete. Great job.', 1200);
+      const p = t[i];
+      if (p.type === 'prep') say('Get ready. First up: ' + nameOf(t[i + 1]), 350);
+      else if (p.type === 'work') say((t.slice(i + 1).some(x => x.type === 'work') ? '' : 'Last one. ') + nameOf(p), 350);
+      else if (p.type === 'warm' || p.type === 'cool') say((p.n === 1 ? (p.type === 'warm' ? 'Warm-up. ' : 'Cool-down. ') : '') + nameOf(p), 350);
+      else { const n = t[i + 1]; say('Rest.' + (n ? ' Next up: ' + nameOf(n) : ''), 350); }
+    }
+    function toggleVoice() {
+      voice.value = !voice.value;
+      try { localStorage.setItem('hiit-voice', voice.value ? '1' : '0'); } catch (e) {}
+      if (voice.value) say('Voice on', 0); else quiet();
+    }
+
+    function toggleMute() {
+      muted.value = !muted.value;
+      try { localStorage.setItem('hiit-muted', muted.value ? '1' : '0'); } catch (e) {}
+      if (muted.value) quiet();
+    }
+
+    function toggleSound() {
+      sound.value = !sound.value;
+      try { localStorage.setItem('hiit-sound', sound.value ? '1' : '0'); } catch (e) {}
+    }
+
+    // Screen wake lock
+    let lock = null;
+    async function keepAwake(on) {
+      try {
+        if (on) { if (!('wakeLock' in navigator) || (lock && !lock.released)) return; lock = await navigator.wakeLock.request('screen'); }
+        else if (lock) { await lock.release(); lock = null; }
+      } catch (e) {}
+    }
+
+    // ===== Timer =====
+    function enter(i, announce, base) {
+      idx.value = i;
+      lastWhole = null;
+      speakPhase(i);
+      if (i >= timeline.value.length) {
+        stopTick(); running.value = false; keepAwake(false);
+        if (announce) { beep(660, .25); setTimeout(() => beep(880, .25), 300); setTimeout(() => beep(1100, .5), 600); }
+        return;
+      }
+      const ms = timeline.value[i].ms;
+      endAt = (base || Date.now()) + ms;
+      remaining.value = Math.min(ms, Math.max(0, endAt - Date.now()));
+      lastWhole = Math.ceil(remaining.value / 1000);
+      if (announce) beep(timeline.value[i].type === 'work' ? 1000 : 600, .45);
+    }
+    function tick() {
+      remaining.value = Math.max(0, endAt - Date.now());
+      const whole = Math.ceil(remaining.value / 1000);
+      if (whole !== lastWhole) {
+        lastWhole = whole;
+        if (whole > 0 && whole <= 3) beep(800, .12);
+      }
+      if (remaining.value <= 0) advance();
+      schedule();
+    }
+    // Move on from the finished interval. If the page was frozen for a while (a call, another app, a locked screen),
+    // skip every interval that should already be over and land on the right one, announcing only that one.
+    function advance() {
+      const len = timeline.value.length, now = Date.now();
+      let j = idx.value, end = endAt;
+      while (j < len && end <= now) { j++; if (j < len) end += timeline.value[j].ms; }
+      if (j >= len) enter(len, true);
+      else enter(j, true, end - timeline.value[j].ms);
+    }
+    // Wake up only when the displayed second changes; each interval starts when the last one should have ended
+    function schedule() {
+      stopTick();
+      if (!running.value) return;
+      const rem = Math.max(0, endAt - Date.now());
+      const delay = rem > 0 ? rem - Math.floor((rem - 1) / 1000) * 1000 : 0;
+      timer = setTimeout(tick, Math.max(10, delay + 5));
+    }
+    function startTick() { schedule(); }
+    function stopTick() { if (timer) clearTimeout(timer); timer = null; }
+
+    function start() {
+      if (!timeline.value.length) return;
+      beep(1, .01); // unlock audio on user gesture
+      running.value = true; enter(0, false); startTick(); keepAwake(true);
+    }
+    function pause() { remaining.value = Math.max(0, endAt - Date.now()); running.value = false; stopTick(); quiet(); }
+    function resume() { endAt = Date.now() + remaining.value; running.value = true; startTick(); }
+    function skip() { const wasRunning = running.value; enter(idx.value + 1, true); if (idx.value < timeline.value.length) { if (!wasRunning) { running.value = false; stopTick(); } else schedule(); } }
+    function reset() { stopTick(); running.value = false; idx.value = -1; keepAwake(false); quiet(); }
+    function again() { reset(); start(); }
+
+    function bump(f, dir) { cfg[f.key] = Math.min(f.max, Math.max(f.min, cfg[f.key] + dir * f.step)); }
+
+    // ===== Keyboard, clicks and wiring =====
+    function onKey(e) {
+      if (e.code === 'Escape' && showSound.value) { showSound.value = false; return; }
+      if (e.code === 'Escape' && showWorkouts.value) { showWorkouts.value = false; return; }
+      if (e.code === 'Escape' && openEx.value !== null) { openEx.value = null; return; }
+      const tag = e.target.tagName;
+      if (e.ctrlKey || e.metaKey || e.altKey || tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const active = phase.value !== 'idle' && phase.value !== 'done';
+      if (e.code === 'Space' && tag !== 'BUTTON') {
+        e.preventDefault();
+        if (phase.value === 'idle') start();
+        else if (phase.value === 'done') reset();
+        else running.value ? pause() : resume();
+      } else if (e.code === 'KeyM') {
+        toggleMute();
+      } else if (e.code === 'KeyS' && active) {
+        skip();
+      } else if (e.code === 'Escape' && (active || phase.value === 'done')) {
+        reset();
+      }
+    }
+    function onVisible() { if (document.visibilityState === 'visible' && running.value) { keepAwake(true); tick(); } }
+    function onClick(e) {
+      const path = e.composedPath ? e.composedPath() : [];
+      const inside = s => path.some(n => n.matches && n.matches(s));
+      const b = e.target.closest && e.target.closest('button'); if (b && e.detail > 0) b.blur();
+      if (showSound.value && !inside('[data-sound]')) showSound.value = false;
+      if (showWorkouts.value && !inside('[data-wmenu]')) showWorkouts.value = false;
+      if (openEx.value !== null && !inside('[data-expanel]') && !inside('[data-extime]')) openEx.value = null;
+    }
+    onMounted(() => { window.addEventListener('keydown', onKey); document.addEventListener('click', onClick); document.addEventListener('visibilitychange', onVisible); });
+    onBeforeUnmount(() => { window.removeEventListener('keydown', onKey); document.removeEventListener('click', onClick); document.removeEventListener('visibilitychange', onVisible); stopTick(); });
+
+    // Mirror phase to <body> (Vue app is mounted on #app, body sits outside)
+    watch(phase, p => { document.body.dataset.phase = p; document.title = p === 'idle' ? 'Interval Timer' : label.value + ' ' + clock.value; }, { immediate: true });
+    watch(clock, () => { if (phase.value !== 'idle') document.title = label.value + ' ' + clock.value; });
+
+
+    return { announcement, exFields, openEx, exBadge, exPad, exEff, stepEx, setEx, useDefaults, toggleEx, stepper, fields, cfg, exercises, addEx, removeEx, moveEx, drag, startDrag, rowStyle, sound, phase, label, clock, sub, progress, running, totalMs, elapsedTotal,
+             fmt, start, pause, resume, skip, reset, bump, toggleSound, toggleVoice, toggleMute, muted, showSound, voice, hasVoice, again,
+             workouts, currentId, curWorkout, showWorkouts, confirmDel, selectWorkout, newWorkout, duplicateWorkout, deleteWorkout,
+             blocks, blockDefs, open, toggleBlock, addItem, removeItem, clampItem, blockSummary,
+             showImport, saveFailed, shareText, shareMsg, importText, fileEl, copyText, importPasted, onFile };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
