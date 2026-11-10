@@ -168,7 +168,7 @@
     <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <p class="display font-extrabold uppercase leading-none" style="font-size: var(--label-size)">{{ label }}</p>
     <p class="t-clock display font-extrabold leading-none" :data-long="clock.length > 4" style="font-size: var(--clock-size)">{{ clock }}</p>
-    <p class="mt-1 text-lg" style="color: var(--muted); font-size: var(--sub-size)">{{ sub }}</p>
+    <p class="mt-1 text-lg" :style="confirmStop ? { color: 'var(--fg)', fontWeight: 600 } : {}" style="color: var(--muted); font-size: var(--sub-size)">{{ sub }}</p>
 
     <div class="t-run mt-6 w-full overflow-hidden rounded-full" style="background: var(--panel); height: var(--bar-h)" role="progressbar" aria-label="Workout progress" :aria-valuenow="Math.round(progress*100)" aria-valuemin="0" aria-valuemax="100">
       <div class="h-full rounded-full" style="background: var(--fg)" :style="{ width: (progress*100) + '%', transition: running ? 'width 1s linear' : 'none' }"></div>
@@ -190,7 +190,7 @@
         <button class="btn" data-stop :style="confirmStop ? 'background: #111; color: #fff; border-color: #111' : ''" :aria-label="confirmStop ? 'Stop workout? Press again to confirm' : 'Stop'" @click="stopClick">{{ confirmStop ? 'Stop?' : 'Stop' }}</button>
       </template>
     </div>
-    <p class="t-hint mt-3 text-xs" style="color: var(--muted)">Keys: Space start or pause, S skip, Esc stop (press twice), M mute.</p>
+    <p class="t-hint mt-3 text-xs" style="color: var(--muted)">Keys: Space start or pause, S skip, X stop (press twice), M mute.</p>
   </main>
 
   <!-- Settings -->
@@ -692,6 +692,7 @@ createApp({
     const label = computed(() => ['work', 'warm', 'cool'].includes(phase.value) ? nameOf(current.value) : ({ idle: 'Workout time', prep: 'Get ready', rest: 'Rest', done: 'Done' }[phase.value]));
     // Read out to screen readers only when the interval changes, not every second
     const announcement = computed(() => {
+      if (confirmStop.value) return 'Stop the workout? Press Stop or X again to confirm.';
       if (phase.value === 'idle') return '';
       if (phase.value === 'done') return 'Workout complete';
       return label.value + ', ' + Math.round(current.value.ms / 1000) + ' seconds';
@@ -702,6 +703,7 @@ createApp({
       return fmt(Math.ceil(remaining.value / 1000) * 1000);
     });
     const sub = computed(() => {
+      if (confirmStop.value && phase.value !== 'idle' && phase.value !== 'done') return 'Press Stop again to end';
       if (phase.value === 'idle') return exercises.value.length + (exercises.value.length === 1 ? ' exercise' : ' exercises') + ' × ' + cfg.rounds + (cfg.rounds === 1 ? ' round' : ' rounds');
       if (phase.value === 'done') return cfg.rounds + ' rounds finished. Nice work.';
       if (phase.value === 'prep') return 'First up: ' + nameOf(timeline.value[1]);
@@ -869,8 +871,10 @@ createApp({
         toggleMute();
       } else if (e.code === 'KeyS' && active) {
         skip();
+      } else if (e.code === 'KeyX' && active) {
+        stopClick();
       } else if (e.code === 'Escape' && (active || phase.value === 'done')) {
-        if (active) stopClick(); else reset();
+        if (active) confirmStop.value = false; else reset();
       }
     }
     function onVisible() { if (document.visibilityState === 'visible' && running.value) { keepAwake(true); tick(); } }
