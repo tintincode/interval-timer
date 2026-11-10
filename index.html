@@ -85,10 +85,16 @@
     body:not([data-phase="idle"]) .btn { padding: .5rem 1.25rem; font-size: 1rem; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* Until the page's code has loaded, hide the unfinished page; if it never loads, explain why */
+  [v-cloak] { display: none !important; }
+  #app:not([v-cloak]) ~ #boot { display: none; }
+  #boot { visibility: hidden; max-width: 28rem; margin: 3rem auto; padding: 0 1.25rem; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.5; animation: bootshow 0s 3s forwards; }
+  #boot h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+  @keyframes bootshow { to { visibility: visible; } }
 </style>
 </head>
 <body data-phase="idle">
-<div id="app" class="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
+<div id="app" v-cloak class="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
 
   <header class="flex items-center justify-between">
     <h1 class="display text-2xl font-bold tracking-wide">Interval Timer</h1>
@@ -125,6 +131,34 @@
         <input ref="fileEl" type="file" accept=".json,.txt,application/json,text/plain" class="hidden" @change="onFile">
         <p v-if="shareMsg" class="mt-2 text-xs" role="status" style="color: var(--muted)">{{ shareMsg }}</p>
       </div>
+      <div v-if="phase === 'idle'" class="mt-2 pt-3" style="border-top: 1.5px solid var(--line)">
+        <button class="w-full text-left" :aria-expanded="showHistory" @click="showHistory = !showHistory; histNow = Date.now(); confirmHist = ''">
+          <span class="font-semibold">History {{ showHistory ? '▾' : '▸' }}</span>
+          <span class="block text-sm" style="color: var(--muted)">{{ weekSummary }}</span>
+        </button>
+        <div v-if="showHistory" class="mt-3">
+          <div class="grid grid-cols-7 gap-1 text-center text-xs" role="img" :aria-label="'Days trained this week: ' + weekDays.filter(d => d.has).length + ' of 7'">
+            <div v-for="d in weekDays" :key="d.key">
+              <div style="color: var(--muted)">{{ d.label }}</div>
+              <div class="mx-auto mt-1 rounded-full" style="width: 1.5rem; height: 1.5rem" :style="{ background: d.has ? '#1f9d45' : 'transparent', border: '1.5px solid ' + (d.has ? '#1f9d45' : d.today ? 'var(--fg)' : 'var(--line)') }"></div>
+            </div>
+          </div>
+          <p v-if="!history.length" class="mt-3 text-sm" style="color: var(--muted)">No sessions yet. A workout is recorded when you finish it, or stop it after at least a minute.</p>
+          <div v-else class="mt-3" style="max-height: 14rem; overflow-y: auto">
+            <template v-for="(h, i) in history" :key="h.id">
+              <p v-if="i === 0 || history[i - 1].date !== h.date" class="mt-2 text-xs font-semibold" style="color: var(--muted)">{{ fmtDay(h.date) }}</p>
+              <div class="flex items-center justify-between gap-2 py-1">
+                <span class="min-w-0 flex-1 text-sm">
+                  <span class="block truncate font-semibold">{{ h.name }}</span>
+                  <span class="block truncate text-xs" style="color: var(--muted)">{{ fmtClock(h.start) }} · {{ fmtMins(h.secs) }}<template v-if="!h.done"> · stopped early</template></span>
+                </span>
+                <button class="step px-2" data-del :style="delStyle(confirmHist === h.id)" :aria-label="'Delete session ' + h.name" @click="deleteSession(h.id)">{{ confirmHist === h.id ? 'Delete?' : '×' }}</button>
+              </div>
+            </template>
+          </div>
+          <button v-if="history.length" data-del class="chip mt-3 w-full text-center" :style="confirmHist === 'all' ? 'background: #d32f2f; color: #fff; border-color: #d32f2f' : ''" @click="clearHistory">{{ confirmHist === 'all' ? 'Tap again to clear all history' : 'Clear history' }}</button>
+        </div>
+      </div>
     </div>
     </div>
   </header>
@@ -153,10 +187,10 @@
       <template v-else>
         <button class="btn btn-solid px-8" @click="running ? pause() : resume()">{{ running ? 'Pause' : 'Resume' }}</button>
         <button class="btn" @click="skip">Skip</button>
-        <button class="btn" @click="reset">Stop</button>
+        <button class="btn" data-stop :style="confirmStop ? 'background: #111; color: #fff; border-color: #111' : ''" :aria-label="confirmStop ? 'Stop workout? Press again to confirm' : 'Stop'" @click="stopClick">{{ confirmStop ? 'Stop?' : 'Stop' }}</button>
       </template>
     </div>
-    <p class="t-hint mt-3 text-xs" style="color: var(--muted)">Keys: Space start or pause, S skip, Esc stop, M mute.</p>
+    <p class="t-hint mt-3 text-xs" style="color: var(--muted)">Keys: Space start or pause, S skip, Esc stop (press twice), M mute.</p>
   </main>
 
   <!-- Settings -->
@@ -170,7 +204,7 @@
       <div v-if="showWorkouts" class="absolute left-0 right-0 top-full z-20 mt-2 rounded-2xl p-2" style="max-height: 70vh; overflow-y: auto; background: var(--bg); border: 1.5px solid var(--line); box-shadow: 0 10px 24px rgba(0,0,0,.25)">
         <div v-for="w in workouts" :key="w.id" class="mb-1 flex items-center gap-2">
           <button class="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-left" :class="{ 'font-bold': w.id === currentId }" @click="selectWorkout(w.id)">{{ w.id === currentId ? '✓ ' : '' }}{{ w.name.trim() || 'Untitled' }}</button>
-          <button class="step px-2" :style="confirmDel === w.id ? { border: 'none', width: 'auto', minWidth: '2.5rem', height: '2.25rem', padding: '0 .9rem', borderRadius: '999px', background: '#d32f2f', color: '#fff', fontSize: '.85rem', fontWeight: 600 } : { border: 'none' }" :aria-label="'Delete ' + (w.name.trim() || 'Untitled')" @click="deleteWorkout(w.id)">{{ confirmDel === w.id ? 'Delete?' : '×' }}</button>
+          <button class="step px-2" data-del :style="delStyle(confirmDel === w.id)" :aria-label="'Delete ' + (w.name.trim() || 'Untitled')" @click="deleteWorkout(w.id)">{{ confirmDel === w.id ? 'Delete?' : '×' }}</button>
         </div>
         <div class="mt-1 grid grid-cols-2 gap-2 pt-2" style="border-top: 1.5px solid var(--line)">
           <button class="chip w-full text-center" @click="newWorkout">+ New</button>
@@ -245,6 +279,11 @@
     </div>
   </section>
   <div v-if="phase==='idle'" class="t-startbar"><button class="btn btn-solid w-full text-xl" @click="start">Start workout</button></div>
+</div>
+
+<div id="boot" role="status">
+  <h1>Interval Timer</h1>
+  <p>Still loading. This page needs JavaScript and an internet connection to load its code. Check both, then reload the page.</p>
 </div>
 
 <script>
@@ -498,6 +537,75 @@ createApp({
       if (wasCurrent) selectWorkout(workouts.value[Math.max(0, i - 1)].id);
     }
 
+    // ===== History: one small record per session, kept on this device =====
+    const history = ref([]);
+    const showHistory = ref(false);
+    const histNow = ref(Date.now());
+    const confirmHist = ref('');
+    let sess = null;   // the session in progress: { start, runStart, acc (ms trained while running), name }
+    const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const redPill = { border: 'none', width: 'auto', minWidth: '2.5rem', height: '2.5rem', padding: '0 .9rem', borderRadius: '999px', background: '#d32f2f', color: '#fff', fontSize: '.85rem', fontWeight: 600, whiteSpace: 'nowrap' };
+    // The look of every "x, then Delete?" button in the pop-up lists (saved workouts and history)
+    const delStyle = confirming => confirming ? redPill : { border: 'none' };
+    // A "Delete?" prompt cancels itself: after 4 seconds, or when the menu it is in is closed
+    let delTimer = null, histTimer = null;
+    watch(confirmDel, v => { clearTimeout(delTimer); if (v) delTimer = setTimeout(() => { confirmDel.value = ''; }, 4000); });
+    watch(confirmHist, v => { clearTimeout(histTimer); if (v) histTimer = setTimeout(() => { confirmHist.value = ''; }, 4000); });
+    watch(showWorkouts, v => { if (!v) confirmDel.value = ''; });
+    watch(showSound, v => { if (!v) confirmHist.value = ''; });
+    try {
+      const saved = JSON.parse(localStorage.getItem('hiit-history') || '[]');
+      if (Array.isArray(saved)) {
+        const seen = new Set();
+        history.value = saved.slice(0, 1000).filter(h => h && Number.isFinite(h.start) && Number.isFinite(h.secs) && h.secs >= 0).map(h => {
+          const id = (typeof h.id === 'string' && h.id && !seen.has(h.id)) ? h.id : uid();
+          seen.add(id);
+          return { id, start: h.start, date: /^\d{4}-\d{2}-\d{2}$/.test(h.date) ? h.date : ymd(new Date(h.start)), name: String(h.name || '').slice(0, 30), secs: Math.round(h.secs), plan: Number.isFinite(h.plan) ? Math.round(h.plan) : 0, done: !!h.done };
+        });
+      }
+    } catch (e) {}
+    watch(history, () => { try { localStorage.setItem('hiit-history', JSON.stringify(history.value)); } catch (e) { saveFailed.value = true; } }, { deep: true });
+    // A session is recorded when the workout finishes, or when it is stopped after at least a minute of training
+    function recordSession(done) {
+      if (!sess) return;
+      const s = sess; sess = null;
+      const secs = Math.round((s.acc + (s.runStart ? Date.now() - s.runStart : 0)) / 1000);
+      if (secs < 60) return;
+      history.value.unshift({ id: uid(), start: s.start, date: ymd(new Date(s.start)), name: s.name, secs, plan: Math.round(totalMs.value / 1000), done });
+      if (history.value.length > 1000) history.value.length = 1000;
+      histNow.value = Date.now();
+    }
+    const weekDays = computed(() => {
+      const now = new Date(histNow.value), dow = (now.getDay() + 6) % 7;   // weeks start on Monday
+      const trained = new Set(history.value.map(h => h.date));
+      return Array.from({ length: 7 }, (_, i) => { const key = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow + i)); return { key, label: 'MTWTFSS'[i], has: trained.has(key), today: i === dow }; });
+    });
+    const weekSessions = computed(() => { const keys = new Set(weekDays.value.map(d => d.key)); return history.value.filter(h => keys.has(h.date)); });
+    const weekSummary = computed(() => {
+      const n = weekSessions.value.length;
+      if (!n) return 'No workouts this week';
+      return 'This week: ' + n + (n === 1 ? ' workout' : ' workouts') + ' · ' + fmtMins(weekSessions.value.reduce((a, h) => a + h.secs, 0));
+    });
+    const fmtDay = key => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); };
+    const fmtClock = ms => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fmtMins = secs => {
+      if (secs < 60) return secs + ' s';
+      if (secs < 600) { const m = Math.floor(secs / 60), r = secs % 60; return m + ' min' + (r ? ' ' + r + ' s' : ''); }
+      if (secs < 3600) return Math.round(secs / 60) + ' min';
+      const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
+      return h + ' h' + (m ? ' ' + m + ' min' : '');
+    };
+    function deleteSession(id) {
+      if (confirmHist.value !== id) { confirmHist.value = id; return; }
+      history.value = history.value.filter(h => h.id !== id);
+      confirmHist.value = '';
+    }
+    function clearHistory() {
+      if (confirmHist.value !== 'all') { confirmHist.value = 'all'; return; }
+      history.value = [];
+      confirmHist.value = '';
+    }
+
     // ===== Drag to reorder =====
     // Drag to reorder: the dragged row follows the pointer; the order changes on release
     const drag = ref(null);
@@ -684,6 +792,7 @@ createApp({
       speakPhase(i);
       if (i >= timeline.value.length) {
         stopTick(); running.value = false; keepAwake(false);
+        recordSession(true);
         if (announce) { beep(660, .25); setTimeout(() => beep(880, .25), 300); setTimeout(() => beep(1100, .5), 600); }
         return;
       }
@@ -726,13 +835,20 @@ createApp({
     function start() {
       if (!timeline.value.length) return;
       beep(1, .01); // unlock audio on user gesture
+      sess = { start: Date.now(), runStart: Date.now(), acc: 0, name: ((curWorkout.value && curWorkout.value.name) || '').trim() || 'Workout' };
       running.value = true; enter(0, false); startTick(); keepAwake(true);
     }
-    function pause() { remaining.value = Math.max(0, endAt - Date.now()); running.value = false; stopTick(); quiet(); }
-    function resume() { endAt = Date.now() + remaining.value; running.value = true; startTick(); }
+    function pause() { remaining.value = Math.max(0, endAt - Date.now()); if (sess && sess.runStart) { sess.acc += Date.now() - sess.runStart; sess.runStart = null; } running.value = false; stopTick(); quiet(); }
+    function resume() { endAt = Date.now() + remaining.value; if (sess) sess.runStart = Date.now(); running.value = true; startTick(); }
     function skip() { const wasRunning = running.value; enter(idx.value + 1, true); if (idx.value < timeline.value.length) { if (!wasRunning) { running.value = false; stopTick(); } else schedule(); } }
-    function reset() { stopTick(); running.value = false; idx.value = -1; keepAwake(false); quiet(); }
+    function reset() { recordSession(false); stopTick(); running.value = false; idx.value = -1; keepAwake(false); quiet(); }
     function again() { reset(); start(); }
+    // Stop needs a second tap (or a second Esc), so a mis-tap cannot throw the workout away
+    const confirmStop = ref(false);
+    let stopTimer = null;
+    function stopClick() { if (!confirmStop.value) { confirmStop.value = true; return; } confirmStop.value = false; reset(); }
+    watch(confirmStop, v => { clearTimeout(stopTimer); if (v) stopTimer = setTimeout(() => { confirmStop.value = false; }, 4000); });
+    watch(phase, () => { confirmStop.value = false; });
 
     function bump(f, dir) { cfg[f.key] = Math.min(f.max, Math.max(f.min, cfg[f.key] + dir * f.step)); }
 
@@ -754,7 +870,7 @@ createApp({
       } else if (e.code === 'KeyS' && active) {
         skip();
       } else if (e.code === 'Escape' && (active || phase.value === 'done')) {
-        reset();
+        if (active) stopClick(); else reset();
       }
     }
     function onVisible() { if (document.visibilityState === 'visible' && running.value) { keepAwake(true); tick(); } }
@@ -765,6 +881,9 @@ createApp({
       if (showSound.value && !inside('[data-sound]')) showSound.value = false;
       if (showWorkouts.value && !inside('[data-wmenu]')) showWorkouts.value = false;
       if (openEx.value !== null && !inside('[data-expanel]') && !inside('[data-extime]')) openEx.value = null;
+      // A tap anywhere except on a delete button cancels a pending "Delete?"
+      if ((confirmDel.value || confirmHist.value) && !inside('[data-del]')) { confirmDel.value = ''; confirmHist.value = ''; }
+      if (confirmStop.value && !inside('[data-stop]')) confirmStop.value = false;
     }
     onMounted(() => { window.addEventListener('keydown', onKey); document.addEventListener('click', onClick); document.addEventListener('visibilitychange', onVisible); });
     onBeforeUnmount(() => { window.removeEventListener('keydown', onKey); document.removeEventListener('click', onClick); document.removeEventListener('visibilitychange', onVisible); stopTick(); });
@@ -774,7 +893,7 @@ createApp({
     watch(clock, () => { if (phase.value !== 'idle') document.title = label.value + ' ' + clock.value; });
 
 
-    return { announcement, exFields, openEx, exBadge, exPad, exEff, stepEx, setEx, useDefaults, toggleEx, stepper, fields, cfg, exercises, addEx, removeEx, moveEx, drag, startDrag, rowStyle, sound, phase, label, clock, sub, progress, running, totalMs, elapsedTotal,
+    return { history, showHistory, histNow, confirmHist, delStyle, weekDays, weekSummary, fmtDay, fmtClock, fmtMins, deleteSession, clearHistory, confirmStop, stopClick, announcement, exFields, openEx, exBadge, exPad, exEff, stepEx, setEx, useDefaults, toggleEx, stepper, fields, cfg, exercises, addEx, removeEx, moveEx, startDrag, rowStyle, sound, phase, label, clock, sub, progress, running, totalMs, elapsedTotal,
              fmt, start, pause, resume, skip, reset, bump, toggleSound, toggleVoice, toggleMute, muted, showSound, voice, hasVoice, again,
              workouts, currentId, curWorkout, showWorkouts, confirmDel, selectWorkout, newWorkout, duplicateWorkout, deleteWorkout,
              blocks, blockDefs, open, toggleBlock, addItem, removeItem, clampItem, blockSummary,
